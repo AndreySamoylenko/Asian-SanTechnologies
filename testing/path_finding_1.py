@@ -1,6 +1,8 @@
 
 import math
 import time
+from pprint import pprint
+
 import cv2
 from exel_stuff import *
 from emulator import Emulator
@@ -140,7 +142,7 @@ def borders_with_tube(mat, coord):
                 return True
     return False
 
-def scan_iteration(field_mat, pos, dir, obj):
+def scan_iteration(field_mat, pos, dir, obj, enable_visual):
     interest = interest_calculation(field_mat, coefficient_mat)
 
     # ------------------- cell to go calculating -------------------#
@@ -179,13 +181,13 @@ def scan_iteration(field_mat, pos, dir, obj):
                 way = wave_back_way(waves, (pos[1], pos[0]), to_go, con_dict, 0, obj, field_mat)
                 print(way)
 
-                ini(obj, replace_ints_in_matrix(visible_mat))
-                wave_visual(waves, obj)
-                cv2.imshow("map", cv2.resize(obj, (600, 600)))
+                if enable_visual: ini(obj, replace_ints_in_matrix(visible_mat))
+                if enable_visual: wave_visual(waves, obj)
+                if enable_visual: cv2.imshow("map", cv2.resize(obj, (600, 600)))
                 cv2.waitKey(1)
 
                 if way:
-                    way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+                    if enable_visual: way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
                     way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(robot.robot_orientation))[0]
                     way += "X1"
                     return  way
@@ -218,12 +220,13 @@ def scan_iteration(field_mat, pos, dir, obj):
         way = wave_back_way(waves, (pos[1], pos[0]), to_go, con_dict, 0, obj, field_mat)
 
         if way and str(field_mat[to_go[0]][to_go[1]])[0] != '3':
-            ini(obj, replace_ints_in_matrix(visible_mat))
-            wave_visual(waves, obj)
-            cv2.imshow("map", cv2.resize(obj, (600, 600)))
-            cv2.waitKey(1)
+            if enable_visual:
+                ini(obj, replace_ints_in_matrix(visible_mat))
+                wave_visual(waves, obj)
+                cv2.imshow("map", cv2.resize(obj, (600, 600)))
+                cv2.waitKey(1)
 
-            way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+                way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
             way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(dir))[0]
             return way
         else:
@@ -242,24 +245,26 @@ def full_scan(mat,robot, enable_visual, obj):
 
     way_to_scan = []
     # visible_mat[pos[0], pos[1]] = [10 if real_robot.check_floor() == 1 else 20]
-    visible_mat[8][8] = 10
+    mat[8][8] = 10
 
-    for i in range(1, 4):
+    for i in range(0, 4):
         tiles = robot.get_3x2_rows(field_mat)
-        robot.update_map(tiles, visible_mat)
-        real_to_emu(robot, "R1", mat)
-        ini(obj, replace_ints_in_matrix(mat))
+        robot.update_map(tiles, mat)
+        if enable_visual: ini(obj, replace_ints_in_matrix(mat))
+        robot.turn_robot(-1)
         cv2.waitKey(0)
 
+    print_colored("spinned", "blue")
+    cv2.waitKey(0)
 
     while  way_to_scan != "scanned":
         if robot.edge_check(field_mat) > 0:
             print_colored("guys we got em", "magenta")
             robot.from_15x15_to_15x8(visible_mat,robot.edge_check(field_mat))
-            ini(obj, visible_mat)
+            if enable_visual: (obj, visible_mat)
             cv2.waitKey(0)
 
-        way_to_scan = scan_iteration(visible_mat, robot.robot_position, robot.robot_orientation, obj)
+        way_to_scan = scan_iteration(visible_mat, robot.robot_position, robot.robot_orientation, obj, enable_visual)
         cv2.waitKey(0)
         real_to_emu(robot,way_to_scan,visible_mat)
 
@@ -373,8 +378,8 @@ obj = cv2.resize(obj, (len(visible_mat) * 100, len(visible_mat[0]) * 100))
 robot = Emulator()
 robot.robot_position = [8,8]
 
-ini(obj, replace_ints_in_matrix(field_mat))
-cv2.waitKey(0)
+# ini(obj, replace_ints_in_matrix(field_mat))
+# cv2.waitKey(0)
 
 # tiles = robot.get_3x2_rows(field_mat)
 # robot.update_map(tiles, visible_mat)
@@ -384,7 +389,7 @@ cv2.waitKey(0)
 
 # print(robot.get_3x2_rows(field_mat))
 
-mat = full_scan(visible_mat, robot, 1, obj)
+mat = full_scan(visible_mat, robot, 0, obj)
 # mat = some_logic_fixes(mat, robot)
 # path = create_path(mat,0)
 # clear()

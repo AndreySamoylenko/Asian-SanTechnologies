@@ -43,8 +43,8 @@ class Emulator:
             Всегда возвращает 2 строки по 3 элемента
         """
         direction = self.robot_orientation
-        center_x = self.robot_position[0] + (robot_pos_finder(replace_ints_in_matrix(matrix))[1] - 8)
-        center_y = self.robot_position[1] + (robot_pos_finder(replace_ints_in_matrix(matrix))[0] - 8)
+        center_x = self.robot_position[0] + (robot_pos_finder(replace_ints_in_matrix(matrix), False)[1] - 8)
+        center_y = self.robot_position[1] + (robot_pos_finder(replace_ints_in_matrix(matrix), False)[0] - 8)
         print(center_x, center_y)
 
         rows = len(matrix)
