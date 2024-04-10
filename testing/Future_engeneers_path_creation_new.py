@@ -1034,12 +1034,9 @@ def way_to_commands_single(path,mat,my_dir):
         if str(mat[path[i]])[0] == "3":
             if mat[path[i + 1]] == 70: #если следующая клетка маршрута - первый этаж
                 dir_list.append("sd")  # means ramp down
-                continue
             else:
                 dir_list.append("su")  # means ramp up
-                continue
-
-
+            continue
 
 
         if path[i][1] == path[i + 1][1] + 1:
@@ -1055,15 +1052,12 @@ def way_to_commands_single(path,mat,my_dir):
     res = []
     # print("dir list:",dir_list)
     # print("facing:", my_dir)
-
+    print(dir_list)
     for i in dir_list:
         #обработка рамп
         if i == "su" or i == "sd": #проезд - рампа - проезд
-            # res.append("X1")
+            res.pop(-1)
             res.append("F1" if i == "su" else "F0")
-
-            # if i == "sd":
-            #     res.append("X1")
             continue
 
         if i == my_dir: #едем вперед если направление то же
