@@ -4,9 +4,10 @@ from Future_engeneers_path_creation_new import create_path, ini_for_nerds, repla
 
 mat = [[31, 10, 52, 20, 10, 10, 10, 10], [20, 10, 20, 20, 20, 34, 10, 41], [20, 10, 20, 20, 20, 34, 71, 31], [33, 34, 32, 10, 10, 10, 10, 20], [20, 20, 34, 10, 20, 10, 10, 20], [20, 10, 42, 10, 20, 10, 10, 20], [10, 10, 10, 10, 20, 20, 10, 33], [63, 63, 63, 10, 33, 10, 10, 10]]
 way = create_path(mat,0)
+ini_for_nerds(replace_ints_in_matrix(mat))
 # print((0,0) == [0,0])
 # print(replace_ints_in_matrix(mat))
-ini_for_nerds(replace_ints_in_matrix(mat))
+
 # cv2.waitKey(0)
 #
 # fix case when start point = finish point (can be brain damaging task)
