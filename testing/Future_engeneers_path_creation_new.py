@@ -877,11 +877,12 @@ def create_path(mat,enable_visual = 0):
     full_way = final_roadmap(obj, mat_to_change,False, enable_visual)
     commands = way_to_commands(full_way,mat_to_change)
     type_u = detect_unload_type(full_way[-1][-1],mat_to_change, 2, commands[1])
+    print(type_u)
     if type_u[1] != "skip":
         commands[0].append(str(type_u[1]))
 
-
-    cv2.imshow("map", cv2.resize(obj, (600, 600)))
+    if enable_visual:
+        cv2.imshow("map", cv2.resize(obj, (600, 600)))
 
     # ---------------------trash---------------------#
     end_time = time.time()
@@ -958,73 +959,80 @@ def get_rotation_direction(current_direction, target_direction):
         # print("fail")
         return None  # Should not happen, but handle it anyway
 
-def detect_unload_type(pos,mat,debugging = 0, dir_list = None):
-    print(pos)
+
+def detect_unload_type(pos, mat, debugging=0, dir_list=None):
+    if debugging:
+        print(pos)
 
     robot_dir = dir_list
     dir = ""
     tube_dir = ""
-    # mat = replace_ints_in_matrix(mat)
 
-    if pos[0] != 7 and mat[pos[0]+1][pos[1]]//10 == 6:
+    # Check for tube in each direction and determine approach direction
+    # Down check
+    if pos[0] != 7 and mat[pos[0] + 1][pos[1]] // 10 == 6:
         if debugging:
             print("down")
-            tube_dir = "D"
+        tube_dir = "D"
 
-        if pos[0] != 7 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
+        # Check right side (relative to tube)
+        if pos[1] != 7 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
             dir = "r"
-
-        elif pos[0] != 7 and pos[1] != 7 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
+        # Check left side (relative to tube)
+        elif pos[1] != 0 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
             dir = "l"
-
         else:
             dir = "c"
 
-    if pos[1] != 7 and mat[pos[0]][pos[1]+1]//10 == 6:
+    # Right check
+    elif pos[1] != 7 and mat[pos[0]][pos[1] + 1] // 10 == 6:
         if debugging:
             print("right")
-            tube_dir = "R"
+        tube_dir = "R"
 
-        if pos[0] != 7 and pos[1] != 7 and mat[pos[0]+1][pos[1]+1]//10 != 6:
+        # Check down side (relative to tube)
+        if pos[0] != 7 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
             dir = "r"
-
-        elif pos[1] != 7 and mat[pos[0]-1][pos[1]+1]//10 != 6:
+        # Check up side (relative to tube)
+        elif pos[0] != 0 and mat[pos[0] - 1][pos[1] + 1] // 10 != 6:
             dir = "l"
-
         else:
             dir = "c"
 
-
-    if mat[pos[0]-1][pos[1]]//10 == 6:
+    # Up check
+    elif pos[0] != 0 and mat[pos[0] - 1][pos[1]] // 10 == 6:
         if debugging:
-            tube_dir = "U"
+            print("up")
+        tube_dir = "U"
 
-        if pos[0] != 7 and pos[1] != 7 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
+        # Check left side (relative to tube)
+        if pos[1] != 0 and mat[pos[0] - 1][pos[1] - 1] // 10 != 6:
             dir = "r"
+        # Check right side (relative to tube)
+        elif pos[1] != 7 and mat[pos[0] - 1][pos[1] + 1] // 10 != 6:
+            dir = "l"
+        else:
+            dir = "c"
 
+    # Left check
+    elif pos[1] != 0 and mat[pos[0]][pos[1] - 1] // 10 == 6:
+        if debugging:
+            print("left")
+        tube_dir = "L"
+
+        # Check up side (relative to tube)
+        if pos[0] != 0 and mat[pos[0] - 1][pos[1] - 1] // 10 != 6:
+            dir = "r"
+        # Check down side (relative to tube)
         elif pos[0] != 7 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
             dir = "l"
-
         else:
             dir = "c"
 
+    if debugging:
+        print(f"Direction: {dir}, Tube direction: {tube_dir}")
 
-
-    if mat[pos[0]][pos[1]-1]//10 == 6:
-        if debugging:
-            tube_dir = "L"
-
-        if mat[pos[0]-1][pos[1]-1]//10 != 6:
-            dir = "r"
-
-        elif pos[0]!= 7 and mat[pos[0]+1][pos[1]-1]//10 != 6:
-            dir = "l"
-
-        else:
-            dir = "c"
-
-    # print(dir)
-    return dir,get_rotation_direction(robot_dir,tube_dir)
+    return dir, get_rotation_direction(robot_dir, tube_dir)
 
 def way_to_commands_single(path,mat,my_dir):
     # print("path:", path)

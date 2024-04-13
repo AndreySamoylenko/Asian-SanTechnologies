@@ -877,6 +877,7 @@ def create_path(mat,enable_visual = 0):
     full_way = final_roadmap(obj, mat_to_change,False, enable_visual)
     commands = way_to_commands(full_way,mat_to_change)
     type_u = detect_unload_type(full_way[-1][-1],mat_to_change, 2, commands[1])
+    print(type_u)
     if type_u[1] != "skip":
         commands[0].append(str(type_u[1]))
 
