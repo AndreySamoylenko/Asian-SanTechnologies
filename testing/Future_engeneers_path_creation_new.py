@@ -959,7 +959,6 @@ def get_rotation_direction(current_direction, target_direction):
         # print("fail")
         return None  # Should not happen, but handle it anyway
 
-
 def detect_unload_type(pos, mat, debugging=0, dir_list=None):
     if debugging:
         print(pos)
@@ -1035,77 +1034,177 @@ def detect_unload_type(pos, mat, debugging=0, dir_list=None):
     return dir, get_rotation_direction(robot_dir, tube_dir)
 
 def way_to_commands_single(path,mat,my_dir):
-    # print("path:", path)
-    dir_list = []
-    mat = np.array(mat)
-    for i in range(len(path)-1):
+    mat  = np.array(mat)
+    res = []
+    floor = 1 if mat[path[0]] == 70 else 2
 
-        if str(mat[path[i+1]])[0] == "3": #если следующая клетка - рампа, то нам нужно думать по другому
-            continue
+    for i in range(len(path)):
+        res_prev = ""
+        current_cell = mat[path[i]]
+        if i+1 < len (path):
+            next_cell=mat[path[i+1]]
 
-        if str(mat[path[i]])[0] == "3":
-            # print("ramping")
-            if mat[path[i + 1]] == 70 or str(mat[path[i + 1]])[0] =="3": #если следующая клетка маршрута - первый этаж
-                dir_list.append("sd")  # means ramp down
-            else:
-                dir_list.append("su")  # means ramp up
+            if current_cell == 70:
+                if next_cell == 70:
+                    res_prev+="X1"
+                elif next_cell//10==3:
+                    res_prev+="F1"
+                    floor = 2
+
+                else: print("ERROR", current_cell, next_cell)
+
+            if current_cell == 10:
+                if next_cell == current_cell:
+                    res_prev+="X1"
+                elif next_cell//10==3:
+                    res_prev+="F0"
+                    floor = 1
+                else: print("ERROR", current_cell, next_cell)
+
+            if current_cell//10 == 3:
+                if next_cell//10 == 3:
+                    res_prev +=f'F{2 - floor}'
+                    floor = 3-floor
+                else:
+                    res_prev+="X1"
+
 
             if path[i][1] == path[i + 1][1] + 1:  # если некст клетка слева, то едем налево
-                dir = "l"
+                res_prev+="L"
             elif path[i][1] == path[i + 1][1] - 1:
-                dir = "r"
+                res_prev+="R"
             elif path[i][0] == path[i + 1][0] + 1:
-                dir = "u"
+                res_prev+="U"
             elif path[i][0] == path[i + 1][0] - 1:
-                dir = "d"
-            dir_list.append(dir)
-            continue
+                res_prev+="D"
 
-        if path[i][1] == path[i + 1][1] + 1: # если некст клетка слева, то едем налево
-            dir = "L"
-        elif path[i][1] == path[i + 1][1] - 1:
-            dir = "R"
-        elif path[i][0] == path[i + 1][0] + 1:
-            dir = "U"
-        elif path[i][0] == path[i + 1][0] - 1:
-            dir = "D"
-        dir_list.append(dir)
+        if res_prev != "":
+            res.append(res_prev)
 
-    res = []
-    u = 0
-    for i in dir_list:
-        #обработка рамп
-        if i in ["u", "d", "r", "l"]:
-            continue
+    print("res:", res)
+    seen = ""
+    count = 1
+    res_optimized = []
+    for i in range(len(res)):
+        if seen == "":
+            seen = res[i]
+        elif res[i] == seen:
+            count += 1
+        else:
+            seen = seen.replace('1',str(count))
+            res_optimized.append(seen)
+            seen = res[i]
+            count = 1
+    seen = seen.replace('1', str(count))
+    res_optimized.append(seen)
 
-        if i == "su" or i == "sd": #проезд - рампа - проезд
-            r_dir = dir_list[u+1].upper()
-            dir_to_r = get_rotation_direction(my_dir, r_dir)
+    print("opt:", res_optimized)
+    print("my_dir", my_dir)
 
-            if dir_to_r != "skip":
-                res.append(dir_to_r)
+    res_relative = []
+    for i in res_optimized:
+        if i[-1] != my_dir:
+            print("move_to_go", get_rotation_direction(my_dir, i[-1]), my_dir, i[-1])
+            res_relative.append(get_rotation_direction(my_dir, i[-1]))
+            my_dir = i[-1]
 
-            res.append("F1" if i == "su" else "F0")
-
-            if dir_list[u+1] != "su" and dir_list[u+1] != "sd":
-                res.append("X1")
-
-            my_dir = r_dir
-
-            continue
-
-        if i == my_dir: #едем вперед если направление то же
-            res.append("X1")
-            continue
+            i = i[0:2]
+            res_relative.append(i)
 
         else:
-            # print(my_dir,i)
-            res.append(get_rotation_direction(my_dir,i)) #делаем поворот и едем вперед при смене направления
-            res.append("X1")
-            my_dir = i
-        u += 1
-    print("res:",res)
-    return res, my_dir
+            i = i[0:2]
+            res_relative.append(i)
+
+    print(res_relative)
+
+    return res_relative, my_dir
+
+
+
+
+
+
+
+
+
+
+
+
+# def way_to_commands_single(path,mat,my_dir):
+#     # print("path:", path)
+#     dir_list = []
+#     mat = np.array(mat)
+#     for i in range(len(path)-1):
+#
+#         if str(mat[path[i]])[0] == "3":
+#             # print("ramping")
+#             if len(dir_list) > 2 and (dir_list[-2])[0] != "3":
+#                 dir_list.pop(-1)
+#
+#             if mat[path[i + 1]] == 70 or str(mat[path[i + 1]])[0] =="3": #если следующая клетка маршрута - первый этаж
+#                 dir_list.append("sd")  # means ramp down
+#             else:
+#                 dir_list.append("su")  # means ramp up
+#
+#             if path[i][1] == path[i + 1][1] + 1:  # если некст клетка слева, то едем налево
+#                 dir = "l"
+#             elif path[i][1] == path[i + 1][1] - 1:
+#                 dir = "r"
+#             elif path[i][0] == path[i + 1][0] + 1:
+#                 dir = "u"
+#             elif path[i][0] == path[i + 1][0] - 1:
+#                 dir = "d"
+#             dir_list.append(dir)
+#             continue
+#
+#         if path[i][1] == path[i + 1][1] + 1: # если некст клетка слева, то едем налево
+#             dir = "L"
+#         elif path[i][1] == path[i + 1][1] - 1:
+#             dir = "R"
+#         elif path[i][0] == path[i + 1][0] + 1:
+#             dir = "U"
+#         elif path[i][0] == path[i + 1][0] - 1:
+#             dir = "D"
+#         dir_list.append(dir)
+#
+#     print("abs:", dir_list)
+#     res = []
+#     u = 0
+#     for i in dir_list:
+#         #обработка рамп
+#         if i in ["u", "d", "r", "l"]:
+#             continue
+#
+#         if i == "su" or i == "sd": #проезд - рампа - проезд
+#             r_dir = dir_list[u+1].upper()
+#             dir_to_r = get_rotation_direction(my_dir, r_dir)
+#
+#             # print(r_dir, my_dir)
+#             if dir_to_r != "skip":
+#                 res.append(dir_to_r)
+#
+#             res.append("F1" if i == "su" else "F0")
+#
+#             if dir_list[u+1] != "su" and dir_list[u+1] != "sd":
+#                 res.append("X1")
+#
+#             print("r_dir:", r_dir)
+#             my_dir = r_dir
+#
+#             continue
+#
+#         if i == my_dir: #едем вперед если направление то же
+#             res.append("X1")
+#             continue
+#
+#         else:
+#             # print(my_dir,i)
+#             res.append(get_rotation_direction(my_dir,i)) #делаем поворот и едем вперед при смене направления
+#             res.append("X1")
+#             my_dir = i
+#         u += 1
+#     print("res:",res)
+#     return res, my_dir
 
 
 
