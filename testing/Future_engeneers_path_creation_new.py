@@ -866,7 +866,7 @@ def way_to_commands(path,field_mat):
     return res, rob_dir
 
 def create_path(mat,enable_visual = 0):
-    unload_dict = {"l":["P1","R1","X1","L1","P1","R1","X1","L1","P1"],"r":["P1","L1","X1","R1","P1","L1","X1","R1","P1"], "c":["L1","X1","R1","P1","R1","X1","L1","P1","R1","X1","L1","P1"]}
+    unload_dict = {"r":["P1","R1","X1","L1","P1","R1","X1","L1","P1"],"l":["P1","L1","X1","R1","P1","L1","X1","R1","P1"], "c":["L1","X1","R1","P1","R1","X1","L1","P1","R1","X1","L1","P1"]}
     mat_to_change = replace_ints_in_matrix(mat)
     start_time = time.time()
 
@@ -1030,7 +1030,6 @@ def detect_unload_type(pos, mat, debugging=0, dir_list=None):
 
     if debugging:
         print(f"Direction: {dir}, Tube direction: {tube_dir}")
-
     return dir, get_rotation_direction(robot_dir, tube_dir)
 
 def way_to_commands_single(path,mat,my_dir):
