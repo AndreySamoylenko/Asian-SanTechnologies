@@ -441,7 +441,7 @@ class MainComputer:
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]),
                             whites[stroke][tile], (tile == 1) * (stroke+1))
 
-        if telemetry:
-            return messages, elevation_differences
+
 
         self.update_map(visible, mat)
+        return messages, elevation_differences

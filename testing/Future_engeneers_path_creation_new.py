@@ -841,7 +841,9 @@ def way_to_commands(path,field_mat):
 
 
     for i in range(len(path)):
-        s_way = way_to_commands_single(path[i], field_mat, rob_dir)
+        if i == len(path)-1: to_tube = 0
+        else: to_tube = 1
+        s_way = way_to_commands_single(path[i], field_mat, rob_dir, to_tube)
 
         res += s_way[0]
         rob_dir = s_way[1]
@@ -959,7 +961,7 @@ def get_rotation_direction(current_direction, target_direction):
         # print("fail")
         return None  # Should not happen, but handle it anyway
 
-def detect_unload_type(pos, mat, debugging=0, dir_list=None):
+def detect_unload_type(pos, mat, debugging=1, dir_list=None):
     if debugging:
         print(pos)
 
@@ -1032,12 +1034,32 @@ def detect_unload_type(pos, mat, debugging=0, dir_list=None):
         print(f"Direction: {dir}, Tube direction: {tube_dir}")
     return dir, get_rotation_direction(robot_dir, tube_dir)
 
-def way_to_commands_single(path,mat,my_dir):
+def way_to_commands_single(path,mat,my_dir, to_tube = 0):
     mat  = np.array(mat)
     res = []
     floor = 1 if mat[path[0]] == 70 else 2
 
     for i in range(len(path)):
+
+        if i == len(path) - 2 and to_tube and len(path) > 2:
+            tubes_codes = [1141,1140,7041,7040]
+            # print(my_dir)
+            my_y = path[-1][0]
+            my_x = path[-1][1]
+
+
+            if res[-1][-1] in ["L","R"]:
+                slice = mat[my_y,my_x-1:my_x+2]
+                if np.isin(slice,tubes_codes).any():
+                    res.append("Q0")
+                    # print("added pre_load!")
+
+            elif res[-1][-1] in ["U","D"]:
+                slice = mat[my_y-1:my_y+2,my_x]
+                if np.isin(slice,tubes_codes).any():
+                    res.append("Q0")
+                    # print("added pre_load!")
+
         res_prev = ""
         current_cell = mat[path[i]]
         if i+1 < len (path):
@@ -1077,10 +1099,10 @@ def way_to_commands_single(path,mat,my_dir):
             elif path[i][0] == path[i + 1][0] - 1:
                 res_prev+="D"
 
-        if res_prev != "":
+        if res_prev != "" and res_prev != None:
             res.append(res_prev)
 
-    print("res:", res)
+    # print("res:", res)
     seen = ""
     count = 1
     res_optimized = []
@@ -1098,12 +1120,12 @@ def way_to_commands_single(path,mat,my_dir):
     res_optimized.append(seen)
 
     print("opt:", res_optimized)
-    print("my_dir", my_dir)
+    # print("my_dir", my_dir)
 
     res_relative = []
     for i in res_optimized:
         if i[-1] != my_dir:
-            print("move_to_go", get_rotation_direction(my_dir, i[-1]), my_dir, i[-1])
+            # print("move_to_go", get_rotation_direction(my_dir, i[-1]), my_dir, i[-1])
             res_relative.append(get_rotation_direction(my_dir, i[-1]))
             my_dir = i[-1]
 

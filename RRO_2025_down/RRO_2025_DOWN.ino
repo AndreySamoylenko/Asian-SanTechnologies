@@ -10,8 +10,6 @@ Servo dserv;
 Servo clawserv;
 Servo armserv;
 
-Servo camserv;
-
 //----------------------servo pins
 #define servoa 36
 #define servob 38
@@ -21,35 +19,32 @@ Servo camserv;
 #define servoClaw 40
 #define servoArm 7
 
-#define servoCatapult A9
-
 #define ASF 143  // A servo Forward position
-#define ASD 88   // A servo Diagonal position
+#define ASD 94   // A servo Diagonal position
 #define ASS 46   // A servo Sideways position
 
 #define BSS 137
-#define BSD 92
+#define BSD 88
 #define BSF 39
 
 #define CSF 142
-#define CSD 89
+#define CSD 93
 #define CSS 46
 
 #define DSS 137
-#define DSD 94
+#define DSD 88
 #define DSF 39
 
 #define ARM_DOWN 44
 #define ARM_SEMIDOWN 70
 #define ARM_FIRST_TUBE 140  // нижняя труба
-#define ARM_SECOND_TUBE 140 - 14
-#define ARM_THIRD_TUBE 140 - 14 - 15
+#define ARM_SECOND_TUBE 140 - 25
+#define ARM_THIRD_TUBE 140 - 25 - 25
 
 #define CLAW_OPEN 80
-#define CLAW_CLOSED 28
-#define CLAW_OPEN_ENOUGH 50
+#define CLAW_CLOSED 25
+#define CLAW_OPEN_ENOUGH 60
 
-#define cam_ready 150
 
 /*----------------------MOTORS-------------------------*/
 #define ma1 2
@@ -76,7 +71,7 @@ Servo camserv;
 
 #define BZ_PIN A5
 
-#define SIGNAL_PIN 15
+#define SIGNAL_PIN 13
 
 int datamin = 620;
 int datbmin = 620;
@@ -100,13 +95,10 @@ int tubes_collected = 0;
 int state = 0;
 uint8_t start_flag = 0;
 
-int pid_speed = 255;
-int turn_speed = 200;
 
 void setup() {
   /*---------SERIAL----------*/
   Serial.begin(9600);
-  Serial2.begin(9600);
   /*-------INTERRUPTS---------*/
   attachInterrupt(digitalPinToInterrupt(18), encl, RISING);
   attachInterrupt(digitalPinToInterrupt(19), encr, RISING);
@@ -122,7 +114,6 @@ void setup() {
   /*-------PINS---------*/
   pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(BZ_PIN, OUTPUT);
-  pinMode(SIGNAL_PIN, OUTPUT);
   /*------Servos------*/
   // delay(500);
   aserv.attach(servoa);
@@ -131,31 +122,61 @@ void setup() {
   dserv.attach(servod);
   armserv.attach(servoArm);
   clawserv.attach(servoClaw);
-  camserv.attach(servoCatapult);
 
   // AllDiagonal();
   // ArmTube(0);
   // delay(500);
-  stop();
   AllForward();
   ArmTube(2);
-  camserv.write(0);
   clawserv.write(CLAW_CLOSED);
   delay(500);
 
-  // beep(200, 200);
-  do_megalovania();
-  // camserv.write(cam_ready);
+  beep(1000, 300);
+  delay(50);
+  beep(700, 70);
+  delay(10);
+  beep(900, 80);
+  delay(50);
+  beep(1500, 300);
 
   Serial.println("Start successful");
-  // buttonWait(1);
+  // buttonWait(0);
 }
+
 void loop() {
-  /*buttonWait(0);
-  // pidEnc(1, 0, 1, 255, 2700, 1);
-  // delay(1000);
-  */
-  StateMachine();
+
+  buttonWait(0);
+  drive(255,255,255,255);
+//  pidXN(250, 1);
+//
+//  turnL(250, -1, 1);
+//  pidXN(200, 2);
+//  turnL(250, 1, 1);
+//
+//  GrabTheTube();
+//  turnL(250, -1, 1);
+//
+//  pidXN(-200, 2);
+//
+//  turnL(250, 1, 1);
+//  pidXN(200, 4);
+//  clawserv.write(CLAW_OPEN_ENOUGH);
+//  ArmTube(2);
+//  turnL(250, -1, 1);
+//  FromNormalToInverse();
+//  pidXN(200, 2);
+
+
+
+
+
+
+
+
+
+
+  // pidEnc(2, 0.05, 3, 200, 800, 1);
+  // delay(10000);
 }
 
 uint32_t tim = 0;

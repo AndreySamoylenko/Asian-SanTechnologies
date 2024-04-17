@@ -12,7 +12,7 @@ mc = MainComputer((8, 8), 1)
 
 
 def drawMap(map__frame, matrix):
-    for j in range(len(matrix)):
+    for j in raange(len(matrix)):
         for i in range(len(matrix[j])):
             path = f"/home/pi/robot/field_pictures/{matrix[j][i]}.png"
             if os.path.exists(path):
