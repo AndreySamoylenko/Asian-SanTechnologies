@@ -10,7 +10,10 @@ float drive_deg(float angle, int sp) {
     if (angle < 0)
       final_impact = final_impact* -1 ;
 
-    Serial.println(final_impact);
+    spa = sp;
+    spc = spa;
+    spb = final_impact;
+    spd = spa;
   }
 
   if (angle_2 > 45) {
@@ -19,7 +22,9 @@ float drive_deg(float angle, int sp) {
     if (angle < 0)
       final_impact = final_impact* -1 ;
 
- 
-    Serial.println(final_impact);
+    spa = final_impact;
+    spc = spa;
+    spb = sp;
+    spd = spa;
   }
 }
