@@ -8,7 +8,7 @@ float drive_deg(float angle, int sp) {
     int vector_lenght = round(abs(sp) / sin(radians(90 - angle_2)));
     int final_impact = round(sqrt(pow(vector_lenght, 2) - pow(sp, 2)));
     if (angle < 0)
-      final_impact* -1 ;
+      final_impact = final_impact* -1 ;
 
     Serial.println(final_impact);
   }
@@ -18,7 +18,7 @@ float drive_deg(float angle, int sp) {
     Serial.println(vector_lenght);
     int final_impact = round(sqrt(pow(vector_lenght, 2) - pow(sp, 2)));
     if (angle < 0)
-      final_impact* -1 ;
+      final_impact = final_impact* -1 ;
 
  
     Serial.println(final_impact);
