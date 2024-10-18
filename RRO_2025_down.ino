@@ -1,11 +1,14 @@
-#define ma1
-#define ma2
-#define mb1
-#define mb2
-#define mc1
-#define mc2
-#define md1
-#define md2
+/*----------------------MOTORS-------------------------*/
+#define ma1 4
+#define ma2 5
+#define mb1 6
+#define mb2 7
+#define mc1 15
+#define mc2 16
+#define md1 17 
+#define md2 18
+
+
 
 
 void setup() {
@@ -52,4 +55,3 @@ void drive(float spa, float spb, float spc, float spd) {
 }
 
 // 1000 шагов энкодера это примерно 37.5 см
-// Я считаю, что этот код слишком сложный для моего понимания
