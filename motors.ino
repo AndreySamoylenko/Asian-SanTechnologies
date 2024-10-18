@@ -15,7 +15,6 @@ float drive_deg(float angle, int sp) {
 
   if (angle_2 > 45) {
     int vector_lenght = round(abs(sp) / sin(radians(angle_2)));
-    Serial.println(vector_lenght);
     int final_impact = round(sqrt(pow(vector_lenght, 2) - pow(sp, 2)));
     if (angle < 0)
       final_impact = final_impact* -1 ;
