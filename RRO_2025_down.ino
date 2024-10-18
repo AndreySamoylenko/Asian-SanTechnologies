@@ -1,3 +1,4 @@
+
 /*----------------------MOTORS-------------------------*/
 #define ma1 4
 #define ma2 5
@@ -5,30 +6,47 @@
 #define mb2 7
 #define mc1 15
 #define mc2 16
-#define md1 17 
+#define md1 17
 #define md2 18
-
-
+/*-----------------------MISC---------------------------*/
+#define BTN_PIN 14
+#define BZ_PIN 1
 
 
 void setup() {
+  /*--------ADC---------*/
+  adc_power_on();
+  adc1_config_channel_atten(9, 11);
+  adc2_config_channel_atten(0, 11);
+  adc2_config_channel_atten(1, 11);
+  adc2_config_channel_atten(2, 11);
+  adc1_config_width(12);
+  adc2_config_width(12);
   // put your setup code here, to run once:
 }
 
 void loop() {
+  Serial.print(adc1_get_raw(9));
+  Serial.print('\t');
+  Serial.print(adc2_get_raw(0));
+  Serial.print('\t');
+  Serial.print(adc2_get_raw(1));
+  Serial.print('\t');
+  Serial.print(adc2_get_raw(2));
+  Serial.print('\t');
   // put your main code here, to run repeatedly:
 }
 
 void driveAngle(uint8_t sped, float angle) {
   float spa, spb, spc, spd;
-  angle = -angle+45;
+  angle = -angle + 45;
 
   spa = cos(rads(angle)) * sped;
   spc = spa /* *k */;
   spb = sin(rads(angle)) * sped;
   spd = spb /* *k */;
-  
-  drive(spa,spb,spc,spd);
+
+  drive(spa, spb, spc, spd);
 }
 
 double rads(double a) {
