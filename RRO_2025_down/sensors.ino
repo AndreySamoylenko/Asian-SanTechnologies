@@ -18,8 +18,16 @@ float sensors(int dat) {
 }
 
 void beep(int freq, int dur) {
-  tone(BZ_PIN, freq);
-  delay(dur);
-  noTone(BZ_PIN);
+  myTone(1.0 / float(freq), dur);
   delay(10);
+}
+
+void myTone(float per, int dur) {
+  uint32_t tim = millis();
+  while (millis() < tim + dur) {
+    digitalWrite(BZ_PIN, 1);
+    delayMicroseconds(per * 1e+5 * 5);
+    digitalWrite(BZ_PIN, 0);
+    delayMicroseconds(per * 1e+5 * 5);
+  }
 }

@@ -41,7 +41,7 @@ void setup() {
   Serial.begin(115200);
   /*-------INTERRUPTS---------*/
   attachInterrupt(digitalPinToInterrupt(2), encl, RISING);
-  attachInterrupt(digitalPinToInterrupt(47), encr, RISING);
+  attachInterrupt(digitalPinToInterrupt(48), encr, RISING);
   /*--------PWM---------*/
   pinMode(ma1, OUTPUT);
   pinMode(ma2, OUTPUT);
@@ -53,28 +53,38 @@ void setup() {
   pinMode(md2, OUTPUT);
   /*-------PINS---------*/
   pinMode(BTN_PIN, INPUT_PULLUP);
+  pinMode(BZ_PIN, OUTPUT);
 
-  beep(1000, 400);
+
+  beep(1000, 300);
+  delay(50);
+  beep(700, 70);
+  delay(10);
+  beep(900, 80);
   delay(50);
   beep(1500, 300);
+  buttonWait(0);
 }
 
 void loop() {
-  buttonWait(0);
 
-  beep(1000, 300);
+  pidX(0.6, 0.01, 3, 200, 100, 1);
+  pidX(0.6, 0.01, 3, 200, 100, 1);
+  pidX(0.6, 0.01, 3, -200, 100, 1);
+  pidX(0.6, 0.01, 3, -200, 100, 1);
+  // turnL(160, 1, 1);
+  // pidX(0.6, 0.01, 3, 110, 100, 1);
+  // turnL(160, 1, 1);
+  // pidX(0.6, 0.01, 3, 180, 100, 1);
+  //
+  // buttonWait(0);
+  //
+  // pidEnc(0.6, 0.01, 3, 180, 1000, 1);
 
-  pidX(0.6, 0.01, 3, 170, 90, 1);
-
-  beep(1000, 400);
-  delay(50);
-  beep(1500, 300);
-  buttonWait(0);
-
-  
-
-  turn(120, 1, 90);
-  // pidEnc(0.6, 0.01, 3, 170, 1000, 1);
+  // delay(500);
+  // beep(700, 200);
+  // delay(50);
+  // beep(1000, 150);
 }
 
 
@@ -94,7 +104,7 @@ void buttonWait(int flag) {
           Serial.print(analogRead(sc));
           Serial.print('\t');
           Serial.print(analogRead(sd));
-          Serial.println('\n');
+          Serial.print("\t\t");
           Serial.print(sensors(1));
           Serial.print('\t');
           Serial.print(sensors(2));
@@ -109,5 +119,6 @@ void buttonWait(int flag) {
       }
     }
   }
-  delay(100);
+  beep(500, 100);
+  delay(50);
 }
