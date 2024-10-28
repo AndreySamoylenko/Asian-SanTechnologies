@@ -3,8 +3,8 @@ import math
 tubes_cords = [[(2,4),1],[(3,1),2],[(5,6),1]] #cords / floor
 field_matrix = [
                [0,1,0,0,0,0,0,0], #possible values: 0 - empty
-               [0,0,1,1,1,0,0,0],  #1 - second floor module, 2x - ramp, can be 23 24 25 26, last symbol means direction
-               [0,0,1,1,1,0,32,0],  #3x up-down ramps, can be 37,38 - last symbols - also direction
+               [0,0,1,1,1,0,0,0],  #1 - second floor module, 3x - ramp, can be 33 34 35 36, last symbol means direction
+               [0,0,1,1,1,0,32,0],  #2x up-down ramps, can be 27,28 - last symbols - also direction
                [0,0,0,35,0,1,1,1],
                [1,1,0,0,0,0,0,0],
                [0,0,0,0,1,0,34,1],
