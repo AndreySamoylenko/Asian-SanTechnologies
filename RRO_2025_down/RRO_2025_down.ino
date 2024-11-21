@@ -1,3 +1,25 @@
+#include <ESP32Servo.h>
+
+Servo Aserv;
+Servo Bserv;
+Servo Cserv;
+Servo Dserv;
+
+#define ASF 135  // A servo Forward position
+#define ASD 89   // A servo Diagonal position
+#define ASS 45   // A servo Sideways position
+
+#define BSS 137
+#define BSD 92
+#define BSF 48
+
+#define CSF 130
+#define CSD 85
+#define CSS 38
+
+#define DSS 137
+#define DSD 90
+#define DSF 48
 
 /*----------------------MOTORS-------------------------*/
 #define ma1 4
@@ -54,7 +76,22 @@ void setup() {
   /*-------PINS---------*/
   pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(BZ_PIN, OUTPUT);
+  /*------Servos------*/
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+  Aserv.setPeriodHertz(50);
+  Aserv.attach(35, 0, 15000);
+  Bserv.attach(36, 0, 15000);
+  Cserv.attach(37, 0, 12000);
+  Dserv.attach(38, 0, 12000);
+  delay(1000);
 
+  AllDiagonal();
+  delay(500);
+  AllForward();
+  delay(500);
 
   beep(1000, 300);
   delay(50);
@@ -63,15 +100,25 @@ void setup() {
   beep(900, 80);
   delay(50);
   beep(1500, 300);
-  buttonWait(0);
+  // buttonWait(0);
 }
 
 void loop() {
+  buttonWait(0);
+  AllDiagonal();
+  delay(100);
 
-  pidX(0.6, 0.01, 3, 200, 100, 1);
-  pidX(0.6, 0.01, 3, 200, 100, 1);
-  pidX(0.6, 0.01, 3, -200, 100, 1);
-  pidX(0.6, 0.01, 3, -200, 100, 1);
+  buttonWait(0);
+  AllForward();
+  delay(100);
+
+  buttonWait(0);
+  AllSideways();
+  delay(100);
+  // pidX(0.6, 0.01, 3, 200, 100, 1);
+  // pidX(0.6, 0.01, 3, 200, 100, 1);
+  // pidX(0.6, 0.01, 3, -200, 100, 1);
+  // pidX(0.6, 0.01, 3, -200, 100, 1);
   // turnL(160, 1, 1);
   // pidX(0.6, 0.01, 3, 110, 100, 1);
   // turnL(160, 1, 1);
