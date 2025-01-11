@@ -30,7 +30,8 @@ void drive(float spa, float spb, float spc, float spd) {
 
   analogWrite(md1, spd > 0 ? spd : 0);
   analogWrite(md2, spd < 0 ? -spd : 0);
-  Serial.println(spa > 0 ? spa : 0);
+
+  Serial.println(abs(spc));
 }
 
 

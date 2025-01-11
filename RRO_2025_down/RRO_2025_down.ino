@@ -5,6 +5,12 @@ Servo Bserv;
 Servo Cserv;
 Servo Dserv;
 
+//----------------------servo pins
+#define servoa 9
+#define servob 2
+#define servoc 38
+#define servod 21
+
 #define ASF 135  // A servo Forward position
 #define ASD 89   // A servo Diagonal position
 #define ASS 45   // A servo Sideways position
@@ -22,19 +28,19 @@ Servo Dserv;
 #define DSF 48
 
 /*----------------------MOTORS-------------------------*/
-#define ma1 4
-#define ma2 5
-#define mb1 6
+#define ma1 17
+#define ma2 18
+#define mb1 4
 #define mb2 7
-#define mc2 15
-#define mc1 16
-#define md2 17
-#define md1 18
+#define mc1 6
+#define mc2 5
+#define md1 15
+#define md2 16
 
 /*----------------------SENSORS-------------------------*/
-#define sa 11
+#define sc 11
 #define sb 10
-#define sc 12
+#define sa 12
 #define sd 13
 
 /*-----------------------MISC---------------------------*/
@@ -77,15 +83,14 @@ void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(BZ_PIN, OUTPUT);
   /*------Servos------*/
-  ESP32PWM::allocateTimer(0);
   ESP32PWM::allocateTimer(1);
-  ESP32PWM::allocateTimer(2);
-  ESP32PWM::allocateTimer(3);
+
   Aserv.setPeriodHertz(50);
-  Aserv.attach(35, 0, 15000);
-  Bserv.attach(36, 0, 15000);
-  Cserv.attach(37, 0, 12000);
-  Dserv.attach(38, 0, 12000);
+  Aserv.attach(servoa, 50, 15000);
+  Bserv.attach(servob, 50, 15000);
+  // Cserv.attach(servoc, 50, 15000);
+  // Dserv.attach(servod, 50, 15000);
+
   delay(1000);
 
   AllDiagonal();
@@ -100,21 +105,24 @@ void setup() {
   beep(900, 80);
   delay(50);
   beep(1500, 300);
-  // buttonWait(0);
+  buttonWait(0);
 }
 
 void loop() {
-  buttonWait(0);
-  AllDiagonal();
-  delay(100);
+  // buttonWait(0);
+  // AllDiagonal();
+  // delay(100);
 
-  buttonWait(0);
-  AllForward();
-  delay(100);
+  //  buttonWait(0);
+  //   AllForward();
+  //   delay(100);
 
-  buttonWait(0);
-  AllSideways();
-  delay(100);
+  // buttonWait(0);
+  drive(100, 100, 100, 100);
+  delay(1000);
+  drive(0, 0, 0, 0);
+
+
   // pidX(0.6, 0.01, 3, 200, 100, 1);
   // pidX(0.6, 0.01, 3, 200, 100, 1);
   // pidX(0.6, 0.01, 3, -200, 100, 1);
