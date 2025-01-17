@@ -8,6 +8,8 @@ void turn(float sped, int side, int angle) {
 }
 
 void turnL(int speed, int side, int way) {
+  AllDiagonal();
+  delay(100);
   int dat1 = 0;
 
   if (side == 1)
@@ -19,17 +21,17 @@ void turnL(int speed, int side, int way) {
     dat1 += 2;  // 2+2 -> 4    1+2 -> 3
 
   while (sensors(dat1) < 160) {
-    drive(side * speed, -side * speed, -side * speed, side * speed);
+    drive(side * speed, side * speed, -side * speed, -side * speed);
   }
   while (sensors(dat1) > 80) {
-    drive(side * speed, -side * speed, -side * speed, side * speed);
+    drive(side * speed, side * speed, -side * speed, -side * speed);
   }
   while (sensors(dat1) < 90) {
-    drive(side * speed, -side * speed, -side * speed, side * speed);
+    drive(side * speed, side * speed, -side * speed, -side * speed);
   }
-  drive(-side * 255, side * 255, side * 255, -side * 255);
+  drive(-side * 255, -side * 255, side * 255, side * 255);
   delay(abs(speed) * 0.2);
-  drive(0,0,0,0);
+  drive(0, 0, 0, 0);
 }
 
 void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
@@ -89,8 +91,8 @@ void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
   }
   if (stop > 0) {  //резко тормоз
     drive(-255 * sped1 / abs(sped1), -255 * sped2 / abs(sped2), -255 * sped2 / abs(sped2), -255 * sped1 / abs(sped1));
-    delay(((abs(sped1) + abs(sped2)) / 2) / 255 * 70);
-    drive(0,0,0,0);
+    delay(((abs(sped1) + abs(sped2)) / 2) / 255 * 10);
+    drive(0, 0, 0, 0);
     delay(50);
   }
 }

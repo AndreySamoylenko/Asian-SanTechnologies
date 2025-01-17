@@ -1,23 +1,28 @@
-#include <ESP32Servo.h>
+#include <Servo.h>
 
-Servo Aserv;
-Servo Bserv;
-Servo Cserv;
-Servo Dserv;
+//----------------- I love arduino! and kinda hate esp(( ---------------//
+
+Servo aserv;
+Servo bserv;
+Servo cserv;
+Servo dserv;
 
 //----------------------servo pins
-#define servoa 9
-#define servob 2
-#define servoc 38
-#define servod 21
+#define servoa 24
+#define servob 13
+#define servoc 6
+#define servod 2
 
-#define ASF 135  // A servo Forward position
+#define servoClaw 22
+#define servoArm 4
+
+#define ASF 136  // A servo Forward position
 #define ASD 89   // A servo Diagonal position
-#define ASS 45   // A servo Sideways position
+#define ASS 43   // A servo Sideways position
 
 #define BSS 137
 #define BSD 92
-#define BSF 48
+#define BSF 46
 
 #define CSF 130
 #define CSD 85
@@ -25,38 +30,43 @@ Servo Dserv;
 
 #define DSS 137
 #define DSD 90
-#define DSF 48
+#define DSF 45
 
 /*----------------------MOTORS-------------------------*/
-#define ma1 17
-#define ma2 18
-#define mb1 4
-#define mb2 7
-#define mc1 6
-#define mc2 5
-#define md1 15
-#define md2 16
+#define ma1 5
+#define ma2 3
+
+#define mb1 10
+#define mb2 11
+
+#define mc1 8
+#define mc2 12
+
+#define md1 9
+#define md2 7
+
 
 /*----------------------SENSORS-------------------------*/
-#define sc 11
-#define sb 10
-#define sa 12
-#define sd 13
+#define sa A3
+#define sb A0
+#define sc A2
+#define sd A1
 
 /*-----------------------MISC---------------------------*/
-#define BTN_PIN 14
-#define BZ_PIN 1
+#define BTN_PIN A5
 
-int datamin = 1165;
-int datbmin = 1561;
-int datcmin = 1341;
-int datdmin = 1041;
+#define BZ_PIN A13
+
+int datamin = 490;
+int datbmin = 600;
+int datcmin = 540;
+int datdmin = 555;
 
 
-int datamax = 3983;
-int datbmax = 4044;
-int datcmax = 4035;
-int datdmax = 3703;
+int datamax = 975;
+int datbmax = 985;
+int datcmax = 980;
+int datdmax = 800;
 
 int countl = 0;
 int countr = 0;
@@ -68,8 +78,8 @@ void setup() {
   /*---------SERIAL----------*/
   Serial.begin(115200);
   /*-------INTERRUPTS---------*/
-  attachInterrupt(digitalPinToInterrupt(2), encl, RISING);
-  attachInterrupt(digitalPinToInterrupt(48), encr, RISING);
+  attachInterrupt(digitalPinToInterrupt(18), encl, RISING);
+  attachInterrupt(digitalPinToInterrupt(19), encr, RISING);
   /*--------PWM---------*/
   pinMode(ma1, OUTPUT);
   pinMode(ma2, OUTPUT);
@@ -83,53 +93,46 @@ void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
   pinMode(BZ_PIN, OUTPUT);
   /*------Servos------*/
-  ESP32PWM::allocateTimer(1);
-
-  Aserv.setPeriodHertz(50);
-  Aserv.attach(servoa, 50, 15000);
-  Bserv.attach(servob, 50, 15000);
-  // Cserv.attach(servoc, 50, 15000);
-  // Dserv.attach(servod, 50, 15000);
-
-  delay(1000);
+  // delay(500);
+  aserv.attach(servoa);
+  bserv.attach(servob);
+  cserv.attach(servoc);
+  dserv.attach(servod);
 
   AllDiagonal();
   delay(500);
   AllForward();
   delay(500);
 
-  beep(1000, 300);
-  delay(50);
-  beep(700, 70);
-  delay(10);
-  beep(900, 80);
-  delay(50);
-  beep(1500, 300);
+  // beep(1000, 300);
+  // delay(50);
+  // beep(700, 70);
+  // delay(10);
+  // beep(900, 80);
+  // delay(50);
+  // beep(1500, 300);
+
+  Serial.println("Start successful");
   buttonWait(0);
 }
 
 void loop() {
   // buttonWait(0);
-  // AllDiagonal();
-  // delay(100);
+  pidX(3, 0.03, 5, 200, 550, 1);
 
-  //  buttonWait(0);
-  //   AllForward();
-  //   delay(100);
+  turnL(160, 1, 1);
+  turnL(160, 1, 1);
+  turnL(160, 1, 1);
 
-  // buttonWait(0);
-  drive(100, 100, 100, 100);
-  delay(1000);
-  drive(0, 0, 0, 0);
+
+  // drive(0, 0, 0, 0);
+
 
 
   // pidX(0.6, 0.01, 3, 200, 100, 1);
-  // pidX(0.6, 0.01, 3, 200, 100, 1);
   // pidX(0.6, 0.01, 3, -200, 100, 1);
   // pidX(0.6, 0.01, 3, -200, 100, 1);
-  // turnL(160, 1, 1);
   // pidX(0.6, 0.01, 3, 110, 100, 1);
-  // turnL(160, 1, 1);
   // pidX(0.6, 0.01, 3, 180, 100, 1);
   //
   // buttonWait(0);
@@ -167,6 +170,10 @@ void buttonWait(int flag) {
           Serial.print(sensors(3));
           Serial.print('\t');
           Serial.print(sensors(4));
+          Serial.print("\t\t");
+          Serial.print(countl);
+          Serial.print('\t');
+          Serial.print(countr);
           Serial.println('\n');
           break;
         default:

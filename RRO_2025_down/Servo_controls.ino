@@ -1,22 +1,22 @@
-void AllForward(){
-  Aserv.write(ASF);
-  Bserv.write(BSF);
-  Cserv.write(CSF);
-  Dserv.write(DSF);
-  delay(100);
+void AllForward() {
+  aserv.write(ASF);
+  bserv.write(BSF);
+  cserv.write(CSF);
+  dserv.write(DSF);
+  // delay(100);
 }
 
-void AllDiagonal(){
-  Aserv.write(ASD);
-  Bserv.write(BSD);
-  Cserv.write(CSD);
-  Dserv.write(DSD);
-  delay(100);
+void AllDiagonal() {
+  aserv.write(ASD);
+  bserv.write(BSD);
+  cserv.write(CSD);
+  dserv.write(DSD);
+  // delay(100);
 }
-void AllSideways(){
-  Aserv.write(ASS);
-  Bserv.write(BSS);
-  Cserv.write(CSS);
-  Dserv.write(DSS);
+void AllSideways() {
+  aserv.write(ASS);
+  bserv.write(BSS);
+  cserv.write(CSS);
+  dserv.write(DSS);
   delay(100);
 }
