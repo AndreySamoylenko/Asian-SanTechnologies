@@ -7,30 +7,30 @@ void turn(float sped, int side, int angle) {
   MoveSync(side * sped, -side * sped, angle * 10.0 / 6.0, 1);
 }
 
-void turnL(int speed, int side, int way) {
+void turnL(int speed, int side_of_turn, int way_to_drive) {
   AllDiagonal();
   delay(100);
   int dat1 = 0;
 
-  if (side == 1)
+  if (side_of_turn == 1)
     dat1 = 1;
   else
     dat1 = 2;
 
-  if (way == -1)
+  if (way_to_drive == -1)
     dat1 += 2;  // 2+2 -> 4    1+2 -> 3
 
   while (sensors(dat1) < 160) {
-    drive(side * speed, side * speed, -side * speed, -side * speed);
+    drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
   }
   while (sensors(dat1) > 80) {
-    drive(side * speed, side * speed, -side * speed, -side * speed);
+    drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
   }
-  while (sensors(dat1) < 90) {
-    drive(side * speed, side * speed, -side * speed, -side * speed);
+  while (sensors(dat1) < 120) {
+    drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
   }
-  drive(-side * 255, -side * 255, side * 255, side * 255);
-  delay(abs(speed) * 0.2);
+  drive(-side_of_turn * 255, -side_of_turn * 255, side_of_turn * 255, side_of_turn * 255);
+  delay(abs(speed) * 0.08);
   drive(0, 0, 0, 0);
 }
 

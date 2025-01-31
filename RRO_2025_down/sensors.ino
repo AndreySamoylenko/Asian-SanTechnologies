@@ -31,3 +31,82 @@ void myTone(float per, int dur) {
     delayMicroseconds(per * 1e+5 * 5);
   }
 }
+
+// some cringe calibration
+
+void calibration() {
+  digitalWrite(13, 1);
+  while (digitalRead(BTN_PIN))
+    ;
+  delay(50);
+  digitalWrite(13, 0);
+
+  uint16_t suma, sumb;
+  suma = 0;
+  sumb = 0;
+  for (int i = 0; i < 10; i++) {
+    delay(10);
+    suma += analogRead(sb);
+    sumb += analogRead(sc);
+  }
+  suma = suma / 10;
+  sumb = sumb / 10;
+  datbmax = suma;
+  datcmax = sumb;
+
+  digitalWrite(13, 1);
+  while (digitalRead(BTN_PIN))
+    ;
+  delay(50);
+  digitalWrite(13, 0);
+
+  suma = 0;
+  sumb = 0;
+  for (int i = 0; i < 10; i++) {
+    delay(10);
+    suma += analogRead(sa);
+    sumb += analogRead(sd);
+  }
+  suma = suma / 10;
+  sumb = sumb / 10;
+  datamax = suma;
+  datdmax = sumb;
+
+
+
+  digitalWrite(13, 1);
+  while (digitalRead(BTN_PIN))
+    ;
+  delay(50);
+  digitalWrite(13, 0);
+
+  suma = 0;
+  sumb = 0;
+  for (int i = 0; i < 10; i++) {
+    delay(10);
+    suma += analogRead(sb);
+    sumb += analogRead(sc);
+  }
+  suma = suma / 10;
+  sumb = sumb / 10;
+  datbmin = suma;
+  datcmin = sumb;
+
+  digitalWrite(13, 1);
+  while (digitalRead(BTN_PIN))
+    ;
+  delay(50);
+  digitalWrite(13, 0);
+
+  suma = 0;
+  sumb = 0;
+  for (int i = 0; i < 10; i++) {
+    delay(10);
+    suma += analogRead(sa);
+    sumb += analogRead(sd);
+  }
+  suma = suma / 10;
+  sumb = sumb / 10;
+  datamin = suma;
+  datdmin = sumb;
+}

@@ -6,7 +6,7 @@ void pidX(float kp, float ki, float kd, float sped, int overdrive, int stop) {
   int dat1 = 255;
   int dat2 = 255;
 
-  int minx = 50;
+  int minx = 200;
   int err_i = 0;
   float sum = 0;
   float errors[10] = { 0 };
@@ -42,31 +42,33 @@ void pidX(float kp, float ki, float kd, float sped, int overdrive, int stop) {
     mot2 = constrain(mot2, 0, 1.3 * speed);
     mot1 = mot1 * way;
     mot2 = mot2 * way;
-    int deg = constrain(U * 0.015, -10, 10);
+    int deg = constrain(U * 0.025, -20, 20);
     // deg *= way;
-    bserv.write(BSF - deg);
-    cserv.write(CSF - deg);
-    dserv.write(DSF + deg);
-    aserv.write(ASF + deg);
+    // bserv.write(BSF - deg);
+    // cserv.write(CSF - deg);
+    // dserv.write(DSF + deg);
+    // aserv.write(ASF + deg);
 
 
     drive(mot1, mot1, mot2, mot2);
   }
   AllForward();
   if (overdrive > 0)
-    pidEnc(kp, ki, kd, sped * 0.8, overdrive, stop);
+    pidEnc(kp, ki, kd, sped * 0.6, overdrive, stop);
   else if (stop == 1) {  //резко тормоз
     int tormoz_speed = -way * 255;
     drive(tormoz_speed, tormoz_speed, tormoz_speed, tormoz_speed);
-    delay(((abs(sped) + abs(sped)) / 2) / 255 * 15);
+    delay(((abs(sped) + abs(sped)) / 2) / 255 * 20);
     drive(0, 0, 0, 0);
     delay(50);
   } else delay(50);
 }
 
-void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
+void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) { 
+  // 800 enc - > 125 mm
+  // 100 enc - > 15.625 mm
   AllForward();
-  delay(100);
+  delay(120);
   float speed = abs(sped);
   countl = 0;
   countr = 0;
@@ -77,6 +79,7 @@ void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
 
   int way = sped / abs(sped);
   while ((countl + countr) < enc) {
+
 
     if (sped > 0) {
       dat1 = sensors(2);
@@ -106,7 +109,7 @@ void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
     mot2 = constrain(mot2, 0, 1.3 * speed);
     mot1 = mot1 * way;
     mot2 = mot2 * way;
-    int deg = constrain(U * 0.015, -10, 10);
+    int deg = constrain(U * 0.025, -20, 20);
     // deg *= way;
     bserv.write(BSF - deg);
     cserv.write(CSF - deg);
@@ -122,7 +125,7 @@ void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
   if (stop == 1) {  //резко тормоз
     int tormoz_speed = -way * 255;
     drive(tormoz_speed, tormoz_speed, tormoz_speed, tormoz_speed);
-    delay(((abs(sped) + abs(sped)) / 2) / 255 * 15);
+    delay(((abs(sped) + abs(sped)) / 2) / 255 * 20);
     drive(0, 0, 0, 0);
   }
   delay(50);
