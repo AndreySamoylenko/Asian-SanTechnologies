@@ -1,3 +1,11 @@
+void pidXN(float sped, int n) {
+  if (n > 1)
+    for (int i = 1; i < n; i++)
+      pidX(3, 0.0, 1, sped, 380, 0);
+  pidX(3, 0.0, 1, sped, 380, 1);
+}
+
+
 void pidX(float kp, float ki, float kd, float sped, int overdrive, int stop) {
   AllForward();
   delay(100);
@@ -6,7 +14,7 @@ void pidX(float kp, float ki, float kd, float sped, int overdrive, int stop) {
   int dat1 = 255;
   int dat2 = 255;
 
-  int minx = 200;
+  int minx = 50;
   int err_i = 0;
   float sum = 0;
   float errors[10] = { 0 };
@@ -20,6 +28,10 @@ void pidX(float kp, float ki, float kd, float sped, int overdrive, int stop) {
     } else {
       dat1 = sensors(1);
       dat2 = sensors(4);
+    }
+    if (inverse) {
+      dat1 = 255 - dat1;
+      dat2 = 255 - dat2;
     }
 
     float e = (dat2 - dat1);
@@ -58,13 +70,13 @@ void pidX(float kp, float ki, float kd, float sped, int overdrive, int stop) {
   else if (stop == 1) {  //резко тормоз
     int tormoz_speed = -way * 255;
     drive(tormoz_speed, tormoz_speed, tormoz_speed, tormoz_speed);
-    delay(((abs(sped) + abs(sped)) / 2) / 255 * 20);
+    delay(((abs(sped) + abs(sped)) / 2) / 255 * 30);
     drive(0, 0, 0, 0);
     delay(50);
   } else delay(50);
 }
 
-void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) { 
+void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
   // 800 enc - > 125 mm
   // 100 enc - > 15.625 mm
   AllForward();
@@ -90,6 +102,7 @@ void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
     }
 
     float e = (dat2 - dat1);
+    if (inverse) e = -e;
     if (abs(e) < 4)
       e = 0;
 
@@ -125,7 +138,7 @@ void pidEnc(float kp, float ki, float kd, float sped, int enc, int stop) {
   if (stop == 1) {  //резко тормоз
     int tormoz_speed = -way * 255;
     drive(tormoz_speed, tormoz_speed, tormoz_speed, tormoz_speed);
-    delay(((abs(sped) + abs(sped)) / 2) / 255 * 20);
+    delay(((abs(sped) + abs(sped)) / 2) / 255 * 30);
     drive(0, 0, 0, 0);
   }
   delay(50);

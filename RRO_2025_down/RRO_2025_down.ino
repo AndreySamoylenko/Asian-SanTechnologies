@@ -7,6 +7,9 @@ Servo bserv;
 Servo cserv;
 Servo dserv;
 
+Servo clawserv;
+Servo armserv;
+
 //----------------------servo pins
 #define servoa 36
 #define servob 38
@@ -32,35 +35,48 @@ Servo dserv;
 #define DSD 88
 #define DSF 39
 
+#define ARM_DOWN 44
+#define ARM_SEMIDOWN 70
+#define ARM_FIRST_TUBE 140  // нижняя труба
+#define ARM_SECOND_TUBE 140 - 25
+#define ARM_THIRD_TUBE 140 - 25 - 25
+
+#define CLAW_OPEN 80
+#define CLAW_CLOSED 25
+#define CLAW_OPEN_ENOUGH 60
+
+
 /*----------------------MOTORS-------------------------*/
 #define ma1 2
 #define ma2 4
 
-#define mb1 6
-#define mb2 8
+#define mb1 8
+#define mb2 6
 
-#define mc1 10
-#define mc2 12
+#define mc1 12
+#define mc2 10
 
 #define md1 11
 #define md2 9
 
 
 /*----------------------SENSORS-------------------------*/
-#define sa A3
+#define sa A1
 #define sb A0
 #define sc A2
-#define sd A1
+#define sd A3
 
 /*-----------------------MISC---------------------------*/
-#define BTN_PIN A5
+#define BTN_PIN A7
 
-#define BZ_PIN A13
+#define BZ_PIN A5
 
-int datamin = 595;
-int datbmin = 640;
-int datcmin = 640;
-int datdmin = 590;
+#define SIGNAL_PIN 13
+
+int datamin = 620;
+int datbmin = 620;
+int datcmin = 600;
+int datdmin = 600;
 
 
 int datamax = 975;
@@ -71,9 +87,14 @@ int datdmax = 975;
 volatile int countl = 0;
 volatile int countr = 0;
 
-
+int inverse = 0;
 float e_old = 0;
 float dat1, dat2 = 0;
+
+int tubes_collected = 0;
+int state = 0;
+uint8_t start_flag = 0;
+
 
 void setup() {
   /*---------SERIAL----------*/
@@ -99,32 +120,58 @@ void setup() {
   bserv.attach(servob);
   cserv.attach(servoc);
   dserv.attach(servod);
+  armserv.attach(servoArm);
+  clawserv.attach(servoClaw);
 
-  AllDiagonal();
-  delay(500);
+  // AllDiagonal();
+  // ArmTube(0);
+  // delay(500);
   AllForward();
+  ArmTube(2);
+  clawserv.write(CLAW_CLOSED);
   delay(500);
 
-  // beep(1000, 300);
-  // delay(50);
-  // beep(700, 70);
-  // delay(10);
-  // beep(900, 80);
-  // delay(50);
-  // beep(1500, 300);
+  beep(1000, 300);
+  delay(50);
+  beep(700, 70);
+  delay(10);
+  beep(900, 80);
+  delay(50);
+  beep(1500, 300);
 
   Serial.println("Start successful");
-  buttonWait(1);
+  // buttonWait(0);
 }
 
 void loop() {
-  
+
   buttonWait(0);
-  pidX(4, 0.0, 0, 200, 380, 1);
+  pidXN(250, 1);
+
+  turnL(250, -1, 1);
+  pidXN(200, 2);
+  turnL(250, 1, 1);
+
+  GrabTheTube();
+  turnL(250, -1, 1);
+
+  pidXN(-200, 2);
 
   turnL(250, 1, 1);
-  delay(200);
-  turnL(250, 1, 1);
+  pidXN(200, 4);
+  clawserv.write(CLAW_OPEN_ENOUGH);
+  ArmTube(2);
+  turnL(250, -1, 1);
+  FromNormalToInverse();
+  pidXN(200, 2);
+
+
+
+
+
+
+
+
 
 
   // pidEnc(2, 0.05, 3, 200, 800, 1);

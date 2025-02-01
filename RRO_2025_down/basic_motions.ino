@@ -1,6 +1,15 @@
 
 #define MIN_SPEED 80
 
+void FromNormalToInverse() {
+
+  pidEnc(3, 0, 1, 200, 200, 0);
+  MoveSync(200, 200, 500, 0);
+  inverse = 1;
+  pidEnc(3, 0, 1, 200, 1000, 1);
+}
+
+
 void turn(float sped, int side, int angle) {
   delay(50);
   drive(side * sped, -side * sped, -side * sped, side * sped);
@@ -20,13 +29,13 @@ void turnL(int speed, int side_of_turn, int way_to_drive) {
   if (way_to_drive == -1)
     dat1 += 2;  // 2+2 -> 4    1+2 -> 3
 
-  while (sensors(dat1) < 160) {
+  while (sensors(dat1) < (inverse ? 255 - 160 : 160)) {
     drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
   }
-  while (sensors(dat1) > 80) {
+  while (sensors(dat1) > (inverse ? 255 - 60 : 60)) {
     drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
   }
-  while (sensors(dat1) < 120) {
+  while (sensors(dat1) < (inverse ? 255 - 120 : 120)) {
     drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
   }
   drive(-side_of_turn * 255, -side_of_turn * 255, side_of_turn * 255, side_of_turn * 255);
@@ -35,7 +44,7 @@ void turnL(int speed, int side_of_turn, int way_to_drive) {
 }
 
 void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
-  dist = (dist / 28.5) * 100;
+  // dist = (dist / 28.5) * 100;
   drive(0, 0, 0, 0);
 
   float e = 0;
@@ -81,16 +90,16 @@ void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
       else
         mot2 = constrain(mot2, -255, 0);
 
-      drive(mot1, mot2, mot2, mot1);
+      drive(mot1, mot1, mot2, mot2);
       e_old = e;
     } else {
-      drive(sped1, sped2, sped2, sped1);
+      drive(sped1, sped1, sped2, sped2);
       if (sped1 != 0) deg = countl;
       if (sped2 != 0) deg = countr;
     }
   }
   if (stop > 0) {  //резко тормоз
-    drive(-255 * sped1 / abs(sped1), -255 * sped2 / abs(sped2), -255 * sped2 / abs(sped2), -255 * sped1 / abs(sped1));
+    drive(-255 * sped1 / abs(sped1), -255 * sped1 / abs(sped1), -255 * sped2 / abs(sped2), -255 * sped2 / abs(sped2));
     delay(((abs(sped1) + abs(sped2)) / 2) / 255 * 10);
     drive(0, 0, 0, 0);
     delay(50);
