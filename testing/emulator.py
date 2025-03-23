@@ -41,16 +41,24 @@ class Emulator:
                     visible[y][x] = field[y][x]
 
     def move_robot_f(self, field):
-        new_pos = [0,0]
-        old_tile = self.robot_position
+        new_pos = [0, 0]
+        old_tile = field[self.robot_position[1]][self.robot_position[0]]
         if self.robot_orientation % 2:
             new_pos[1] += self.robot_orientation - 2
         else:
             new_pos[0] += 3 - self.robot_orientation
-        if field[new_pos[1],new_pos[0]]==0:
+
+        new_tile = field[new_pos[1]][new_pos[0]]
+        if new_tile == 0:
             print("opa, you are trying to drive into undefined tile")
-        elif field[new_pos[1],new_pos[0]]==10 and old_tile==10:
-            pass
+        elif old_tile == 10:
+            if new_tile == 10:
+                self.robot_position = new_pos
+            elif new_tile == 30 + self.robot_orientation:
+                self.robot_position = new_pos
+            else:
+                print(f"you can't do that, you CAN'T go from {old_tile} to {new_tile} in this direction")
+                exit()
         else:
             print()
 
