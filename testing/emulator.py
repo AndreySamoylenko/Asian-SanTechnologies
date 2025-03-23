@@ -40,12 +40,19 @@ class Emulator:
                 if visible[y][x] == 0:
                     visible[y][x] = field[y][x]
 
-    def move_robot_f(self):
-        dir = self.robot_orientation
-        if dir % 2:
-            self.robot_position[1] += dir - 2
+    def move_robot_f(self, field):
+        new_pos = [0,0]
+        old_tile = self.robot_position
+        if self.robot_orientation % 2:
+            new_pos[1] += self.robot_orientation - 2
         else:
-            self.robot_position[0] += 3 - dir
+            new_pos[0] += 3 - self.robot_orientation
+        if field[new_pos[1],new_pos[0]]==0:
+            print("opa, you are trying to drive into undefined tile")
+        elif field[new_pos[1],new_pos[0]]==10 and :
+            pass
+        else:
+            print()
 
     def turn_robot(self, way):
         if way > 0:
@@ -63,8 +70,6 @@ class Emulator:
         YELLOW = "\033[33m"  # Желтый
         WHITE = "\033[97m"  # Белый
         RESET = "\033[0m"  # Сброс цвета
-        UNDERLINE = "\033[4m"  # Код подчеркивания
-        ITALIC = "\033[3m"
 
         # Цвет фона
         BLACK_BG = "\033[40m"  # Чёрный фон
@@ -78,11 +83,11 @@ class Emulator:
                 10: [WHITE, WHITE_BG, "\u2588\u2588", RESET],
                 20: [BLACK, WHITE_BG, "\u2588\u2588", RESET],
                 31: [RED, BLACK_BG, f"\u25CF{BLUE}\u25CF", RESET],
-                32: [WHITE, BLACK_BG, "\u2588\u2588", RESET],
+                32: [RED, BLACK_BG, f"\u259D{BLUE}\u2596", RESET],
                 33: [BLUE, BLACK_BG, f"\u25CF{RED}\u25CF", RESET],
-                34: [WHITE, BLACK_BG, "\u2588\u2588", RESET],
+                34: [BLUE, BLACK_BG, f"\u259D{RED}\u2596", RESET],
                 41: [RED, WHITE_BG, "\u25CF\u25CF", RESET],
-                42: [RED, WHITE_BG, "\u2590\u258C", RESET],
+                42: [WHITE, RED_BG, "\u258C\u2590", RESET],
                 51: [RED, BLACK_BG, "\u25CF\u25CF", RESET],
                 52: [RED, BLACK_BG, "\u2590\u258C", RESET],
                 61: [WHITE, GREEN_BG, "\u2584\u2584", RESET],
