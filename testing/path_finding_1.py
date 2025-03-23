@@ -4,11 +4,11 @@
 
 (возможно добавим краям веса)
 """
-from emulator import *
-import numpy as np
-from Future_engeneers_path_creation_new import *
 
-em = emulator
+from Future_engeneers_path_creation_new import *
+from emulator import *
+
+em = Emulator()
 field_mat = np.array([
     [42, 10, 10, 10, 10, 10, 10, 10],
     [20, 33, 20, 20, 20, 34, 10, 33],
@@ -35,10 +35,10 @@ coefficient_mat1 = np.array([[1, 1, 1],
                              ])
 
 
-def interest_calculation(field_mat, coef_mat):
-    unrevealed = np.array([[1 if cell == 0 else 0 for cell in row] for row in field_mat])
+def interest_calculation(field, coef_mat):
+    unrevealed = np.array([[1 if cell == 0 else 0 for cell in row] for row in field])
     # print(unrevealed)
-    rows, cols = len(field_mat), len(field_mat[0])
+    rows, cols = len(field), len(field[0])
     k_rows, k_cols = len(coef_mat), len(coef_mat[0])
     offset_r, offset_c = k_rows // 2, k_cols // 2  # Центр маски
 
@@ -56,12 +56,14 @@ def interest_calculation(field_mat, coef_mat):
 
     return result
 
-def border_find(interest,mat,pos,dir):
-    revealed = np.array([[0 if cell == 0 else 1 for cell in row] for row in field_mat])
+
+def border_find(coef_mat, mat, pos):
+    interest = interest_calculation(mat,coef_mat)
+    revealed = np.array([[0 if cell == 0 else 1 for cell in row] for row in mat])
     cords = {}
-    for i in range(len(field_mat)):
-        for j in range(len(field_mat)):
-            cords[(i,j)] = revealed[i][j]*interest[i][j]
+    for i in range(len(mat)):
+        for j in range(len(mat)):
+            cords[(i, j)] = revealed[i][j] * interest[i][j]
     way = []
     while not way:
         to_go = max(cords.values())
@@ -70,16 +72,16 @@ def border_find(interest,mat,pos,dir):
                 to_go = key
                 break
         con_dict = neighbour_ini(replace_ints_in_matrix(mat))
-        waves = wave_ini(pos,con_dict)
-        way = wave_back_way(waves,pos,to_go,con_dict,0,None,mat)
+        waves = wave_ini(pos, con_dict)
+        way = wave_back_way(waves, pos, to_go, con_dict, 0, None, mat)
         if way:
-            way = way_to_commands([way,0],field_mat)
+            way = way_to_commands([way, 0], mat)
             print("way")
         else:
             del cords[to_go]
 
 
-border_find(interest_calculation(field_mat,coefficient_mat),field_mat,(3,5),1)
+border_find(coefficient_mat, field_mat, (3, 5))
 
 # print(coefficient_mat1)
 # robot_position = [4, 3]
