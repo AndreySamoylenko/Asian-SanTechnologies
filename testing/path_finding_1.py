@@ -54,14 +54,3 @@ def interest_calculation(field_mat, coef_mat):
 
     return result
 
-
-print(coefficient_mat1)
-robot_position = [4, 3]
-robot_orientation = 1
-em.reveal_2x3(robot_position, robot_orientation, field_mat, visible_mat)
-print(visible_mat)
-# print(weight_mat)
-em.show_map(visible_mat, robot_position, robot_orientation)
-em.turn_robot(1)
-em.reveal_2x3(robot_position, robot_orientation, field_mat, visible_mat)
-em.show_map(visible_mat, robot_position, robot_orientation)
