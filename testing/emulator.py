@@ -18,24 +18,21 @@ field_mat = np.array([
 visible_mat = np.array([[0] * 8] * 8)
 
 
-class emulator:
+class Emulator:
     def __init__(self):
         self.robot_position = [3, 3]
         self.robot_orientation = 1
 
     def reveal_2x3(self, field, visible):
-        offsetx, offsety = 0, 0
         height, width = 3, 3
         if self.robot_orientation % 2:
-            offsetx = -1
-            offsety = -2 * (self.robot_orientation == 1) + (self.robot_orientation == 3)
+            offsets = [-1,-2 * (self.robot_orientation == 1) + (self.robot_orientation == 3)]
             height = 2
         else:
-            offsetx = -2 * (self.robot_orientation == 4) + (self.robot_orientation == 2)
-            offsety = -1
+            offsets = [-2 * (self.robot_orientation == 4) + (self.robot_orientation == 2), -1]
             width = 2
 
-        new_tiles_pos = [self.robot_position[0] + offsetx, self.robot_position[1] + offsety]
+        new_tiles_pos = [self.robot_position[0] + offsets[0], self.robot_position[1] + offsets[1]]
         for x in range(new_tiles_pos[0], new_tiles_pos[0] + width):
             for y in range(new_tiles_pos[1], new_tiles_pos[1] + height):
                 if visible[y][x] == 0:
@@ -49,12 +46,11 @@ class emulator:
             self.robot_position[0] += 3 - dir
 
     def turn_robot(self, way):
-        global robot_orientation
         if way > 0:
-            robot_orientation = (robot_orientation + way - 1) % 4 + 1
+            self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
         elif way < 0:
             way = -way
-            robot_orientation = (robot_orientation + way - 1) % 4 + 1
+            self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
 
     def display_symb(self, tile, underline=0):
         # ANSI-коды цвета
@@ -114,5 +110,5 @@ class emulator:
         rows, cols = len(visible), len(visible[0])
         for y in range(cols):
             for x in range(rows):
-                self.display_symb(visible[y][x], self.robot_orientation, self.robot_position[1] == y and self.position[0] == x)
+                self.display_symb(visible[y][x], self.robot_position[1] == y and self.robot_position[0] == x)
             print()
