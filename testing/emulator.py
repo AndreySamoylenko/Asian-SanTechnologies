@@ -19,14 +19,16 @@ visible_mat = np.array([[0] * 8] * 8)
 
 
 class Emulator:
-    def __init__(self):
-        self.robot_position = [3, 3]
-        self.robot_orientation = 1
+    def __init__(self, position=None, direction=1):
+        if position is None:
+            position = [3, 3]
+        self.robot_position = position
+        self.robot_orientation = direction
 
     def reveal_2x3(self, field, visible):
         height, width = 3, 3
         if self.robot_orientation % 2:
-            offsets = [-1,-2 * (self.robot_orientation == 1) + (self.robot_orientation == 3)]
+            offsets = [-1, -2 * (self.robot_orientation == 1) + (self.robot_orientation == 3)]
             height = 2
         else:
             offsets = [-2 * (self.robot_orientation == 4) + (self.robot_orientation == 2), -1]

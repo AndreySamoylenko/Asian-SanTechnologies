@@ -4,9 +4,11 @@
 
 (возможно добавим краям веса)
 """
-from emulator import *
+import time
+import numpy as np
+from emulator import Emulator
 
-em = emulator
+em = Emulator()
 field_mat = np.array([
     [42, 10, 10, 10, 10, 10, 10, 10],
     [20, 33, 20, 20, 20, 34, 10, 33],
@@ -53,4 +55,8 @@ def interest_calculation(field_mat, coef_mat):
             result[r][c] = total
 
     return result
+
+
+em.show_map(field_mat)
+
 
