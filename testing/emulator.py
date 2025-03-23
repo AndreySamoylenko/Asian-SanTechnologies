@@ -49,7 +49,7 @@ class Emulator:
             new_pos[0] += 3 - self.robot_orientation
         if field[new_pos[1],new_pos[0]]==0:
             print("opa, you are trying to drive into undefined tile")
-        elif field[new_pos[1],new_pos[0]]==10 and :
+        elif field[new_pos[1],new_pos[0]]==10 and old_tile==10:
             pass
         else:
             print()
