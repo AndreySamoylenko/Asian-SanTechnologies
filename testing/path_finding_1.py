@@ -37,7 +37,6 @@ coefficient_mat1 = np.array([[1, 1, 1],
 
 def interest_calculation(field, coef_mat):
     unrevealed = np.array([[1 if cell == 0 else 0 for cell in row] for row in field])
-    # print(unrevealed)
     rows, cols = len(field), len(field[0])
     k_rows, k_cols = len(coef_mat), len(coef_mat[0])
     offset_r, offset_c = k_rows // 2, k_cols // 2  # Центр маски
