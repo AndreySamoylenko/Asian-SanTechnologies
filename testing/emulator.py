@@ -62,17 +62,17 @@ class Emulator:
         elif old_tile == 20:
             if new_tile == 20:
                 self.robot_position = new_pos
-            elif new_tile == 30 + (5-self.robot_orientation):
+            elif new_tile == 30 + (5 - self.robot_orientation):
                 self.robot_position = new_pos
             else:
                 print(f"you can't do that, you CAN'T go from {old_tile} to {new_tile} in this direction")
                 exit(1)
-        elif old_tile//10 == 3:
-            if abs(old_tile-new_tile)==2: # с рампы на рампу
+        elif old_tile // 10 == 3:
+            if abs(old_tile - new_tile) == 2:  # с рампы на рампу
                 self.robot_position = new_pos
             elif old_tile == 30 + self.robot_orientation and new_tile == 20:
                 self.robot_position = new_pos
-            elif old_tile == 30 + (5-self.robot_orientation) and new_tile == 10:
+            elif old_tile == 30 + (5 - self.robot_orientation) and new_tile == 10:
                 self.robot_position = new_pos
             else:
                 print(f"you can't do that, you CAN'T go from {old_tile} to {new_tile} in this direction")
@@ -81,11 +81,7 @@ class Emulator:
             print()
 
     def turn_robot(self, way):
-        if way > 0:
-            self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
-        elif way < 0:
-            way = -way
-            self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
+        self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
 
     def display_symb(self, tile, underline=0):
         # ANSI-коды цвета
