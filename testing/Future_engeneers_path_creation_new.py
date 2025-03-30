@@ -69,9 +69,9 @@ def show_smth(code, cords, object):
 
     # print(code)
 
-    # pic = cv2.imread(f"field_pics/{code}.png") #создание объекта нужной картинки
-    # object[100 * cords[0]:100 * cords[0] + 100, 100 * cords[1]: 100 * cords[1] + 100] = pic #вывод хехе
-    # cv2.waitKey(1)
+    pic = cv2.imread(f"field_pics/{code}.png") #создание объекта нужной картинки
+    object[100 * cords[0]:100 * cords[0] + 100, 100 * cords[1]: 100 * cords[1] + 100] = pic #вывод хехе
+    cv2.waitKey(1)
 
 def print_matrix(matrix):
     if not matrix: #печатаем матрицы, что непонятного?
@@ -1092,7 +1092,7 @@ def ini_for_nerds(mat):
     # print(waves)
     # print("done")
     cv2.imshow("map", cv2.resize(obj, (600, 600)))
-    cv2.waitKey(1)
+    cv2.waitKey(0)
 
 def tg_ini(mat):
     obj = cv2.imread("white_picture.jpg")  # картинка для фона
@@ -1219,6 +1219,140 @@ def detect_unload_type(pos,mat,debugging = 0, dir_list = None):
 
     # print(dir)
     return dir,get_rotation_direction(robot_dir,tube_dir)
+
+def way_to_commands_single(path,mat,my_dir):
+    print("path:", path)
+    dir_list = []
+    for i in range(len(path)-1):
+
+        if int(str(mat[path[i][0]][path[i][1]])[0]) == 3:
+            if mat[path[i + 1][0]][path[i + 1][1]] == 10:
+                dir_list.append("sd")  # means ramp down
+
+            else:
+                dir_list.append("su")  # means ramp up
+
+            continue
+
+
+        if path[i][1] == path[i + 1][1] + 1:
+            dir = "L"
+        elif path[i][1] == path[i + 1][1] - 1:
+            dir = "R"
+        elif path[i][0] == path[i + 1][0] + 1:
+            dir = "U"
+        elif path[i][0] == path[i + 1][0] - 1:
+            dir = "D"
+        dir_list.append(dir)
+
+    print(dir_list)
+
+
+    dir_str = ""
+    for i in dir_list:
+        dir_str += str(i)
+
+    result = []
+    m = 0
+    while m < len(dir_str):
+        if dir_str[m] == 't' or dir_str[m] == 's' or dir_str[m] == 'T':
+            if m + 1 < len(dir_str):
+                result.append(dir_str[m:m + 2])
+                m += 2  # Skip the next number as well
+        else:
+            digit, group = next(groupby(dir_str[m:]))
+            count = len(list(group))
+            result.append(f"{digit}{count}")
+            m += count
+
+    dir_str = "*".join(result)
+    dir_list = split_string_into_pairs(dir_str)
+
+    print_colored("\n\n     absolute command path:", "blue")
+    print_colored(dir_list, "blue")
+
+    res_real = []
+    to_add = 0
+    my_dir = "U"
+
+    for i in range(len(dir_list)):
+        if i == 0:
+            if my_dir != str(dir_list[i])[0]:
+                if get_rotation_direction(my_dir, str(dir_list[i])[0]) != "skip":
+                    res_real.append(get_rotation_direction(my_dir, str(dir_list[i])[0]))
+            # print("dir:", get_rotation_direction(my_dir,str(dir_list[i])[0]), str(dir_list[i])[0])
+
+            # print("1:", str(dir_list[i])[-1])
+            res_real.append("X" + str(int(str(dir_list[i])[-1]) + to_add))
+            to_add = 0
+            # print("num:", str(dir_list[i])[-1])
+            my_dir = str(dir_list[i])[0]
+
+        if i != 0:
+
+            if str(dir_list[i])[0] != "t" and str(dir_list[i])[0] != "T" and str(dir_list[i])[0] != "s":
+                if my_dir != str(dir_list[i])[0]:
+
+                    if get_rotation_direction(my_dir, str(dir_list[i])[0]) != "skip":
+                        # print(get_rotation_direction(my_dir, str(dir_list[i])[0]))
+                        res_real.append(get_rotation_direction(my_dir, str(dir_list[i])[0]))
+
+                # print("2:", get_rotation_direction(my_dir, str(dir_list[i])[0]))
+                res_real.append("X" + str(int(str(dir_list[i])[-1]) + to_add))
+                to_add = 0
+                my_dir = str(dir_list[i])[0]
+
+            else:
+                if str(dir_list[i])[0] == "t":
+                    if my_dir != str(dir_list[i])[0]:
+
+                        # print(get_rotation_direction(my_dir, str(dir_list[i])[0]))
+                        if get_rotation_direction(my_dir, str(dir_list[i])[-1]) != "skip":
+                            res_real.append(get_rotation_direction(my_dir, str(dir_list[i])[-1]))
+
+                    my_dir = str(dir_list[i])[-1]
+                    res_real.append("G0")
+
+                if str(dir_list[i]) == "su":
+                    if res_real[-1] == "X1":
+                        res_real = res_real[:-1]
+
+                    else:
+                        num = int(res_real[-1][-1])
+                        res_real = res_real[:-1]
+                        res_real.append("X" + str(num - 1))
+
+                        # to_add = 1
+
+                    res_real.append("F1")  # up
+                    res_real.append("X1")
+
+                if str(dir_list[i]) == "sd":
+
+                    if res_real[-1] == "X1":
+                        res_real = res_real[:-1]
+                    else:
+                        num = int(res_real[-1][-1])
+                        res_real = res_real[:-1]
+                        res_real.append("X" + str(num - 1))
+
+                    # to_add = 1
+
+                    res_real.append("F0")  # down
+                    res_real.append("X1")
+
+    num = int(res_real[-1][-1])
+    res_real = res_real[:-1]
+    res_real.append("X" + str(num - 1))
+
+    print_colored("\n\n\n\n\n    relative command path::", "cyan")
+    print_colored(res_real, "cyan")
+
+    print_colored("\n\n     DONE", "green")
+
+    return res_real, dir_list
+
+
 
 
 

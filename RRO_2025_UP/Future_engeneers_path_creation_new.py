@@ -68,11 +68,11 @@ def show_smth(code, cords, object):
     if code == 1041:
         code = 1141
 
-    # print(code)
+    print(code)
 
-    # pic = cv2.imread(f"field_pics/{code}.png") #создание объекта нужной картинки
-    # object[100 * cords[0]:100 * cords[0] + 100, 100 * cords[1]: 100 * cords[1] + 100] = pic #вывод хехе
-    # cv2.waitKey(1)
+    pic = cv2.imread(f"field_pics/{code}.png") #создание объекта нужной картинки
+    object[100 * cords[0]:100 * cords[0] + 100, 100 * cords[1]: 100 * cords[1] + 100] = pic #вывод хехе
+    cv2.waitKey(1)
 
 def print_matrix(matrix):
     if not matrix: #печатаем матрицы, что непонятного?
@@ -1093,7 +1093,7 @@ def ini_for_nerds(mat):
     # print(waves)
     # print("done")
     cv2.imshow("map", cv2.resize(obj, (600, 600)))
-    cv2.waitKey(1)
+    cv2.waitKey(0)
 
 def tg_ini(mat):
     obj = cv2.imread("white_picture.jpg")  # картинка для фона
