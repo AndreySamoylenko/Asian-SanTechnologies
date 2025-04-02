@@ -10,11 +10,11 @@ print(way)
 ini_for_nerds(replace_ints_in_matrix(mat))
 cv2.waitKey(0)
 
-#todo fix case when start point = finish point (can be brain damaging task)
-#todo add unload path building (rn it only gets to the closest unload point) (if closest unload point = point to pick up tube it wont work properly because of previous problem)
-#todo make code a little bit more readable (rn it really messy)
+# fix case when start point = finish point (can be brain damaging task)
+# add unload path building (rn it only gets to the closest unload point) (if closest unload point = point to pick up tube it wont work properly because of previous problem)
+# make code a little bit more readable (rn it really messy)
 
-#todo (important) - add to final str unload variant (1!!!!1!!!1!!)
+# (important) - add to final str unload variant (1!!!!1!!!1!!)
 
 
 # def border_find(interest,mat,pos,dir):

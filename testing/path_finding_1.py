@@ -191,7 +191,7 @@ def full_scan(mat,robot):
     #             print_colored("Seems like this thing is impossible to solve tbh", "red")
     #             return exit()
 
-    #todo надо придумать каким образом починить эту затычку
+    # надо придумать каким образом починить эту затычку
     visible_mat[robot.robot_position[0]][robot.robot_position[1]] = 10
 
     if np.any(mat == 0):
