@@ -77,7 +77,8 @@ while 1:
             counter %= len(list_of_motions)
 
     if state == "floor checking":
-        floor = mc.check_floor(mc.from_cords_to_slice(frame, [[270, 420], [640 - 270, 480]]))
+        floor = mc.check_floor(frame)
+        mc.elevation = floor
         list_of_motions[1] = f'a{floor}'
         print(floor)
         state = "string reading"
