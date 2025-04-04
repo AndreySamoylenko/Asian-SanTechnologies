@@ -50,7 +50,7 @@ upWhite = np.array([180, 70, 255])
 # -------------------------Cords for cv2----------------------------------
 
 edge_cords = {1: (((220, 105), (420, 135)), ((170, 215), (470, 245)), ((200, 440), (440, 480))),
-              2: (((220, 105), (420, 135)), ((170, 215), (470, 245)), ((200, 440), (440, 480)))}
+              2: (((220, 145), (420, 175)), ((170, 255), (470, 280)), ((200, 440), (440, 480)))}
 
 interest_zones = {"higher": [[[[0, 190], [160, 360]], [[180, 170], [460, 350]], [[480, 190], [640, 360]]],
                              [[[90, 95], [215, 150]], [[240, 100], [400, 180]], [[425, 95], [550, 150]]]],
@@ -363,7 +363,7 @@ class MainComputer:
                          [cords_of_tiles_on_map[0] + width, cords_of_tiles_on_map[1] + height]]
         return self.from_cords_to_slice(mat, overall_cords)
 
-    def scan_frame(self, frame, mat):
+    def scan_frame(self, frame, mat, telemetry = 0):
         messages = [['a', 'b', 'c'], ['d', 'e', 'f']]
         elevation_differences = [[0, 0, 0], [0, 0, 0]]
 
@@ -400,3 +400,6 @@ class MainComputer:
                             whites[stroke][tile])
 
         self.update_map(visible, mat)
+
+        if telemetry:
+            return messages, elevation_differences
