@@ -474,7 +474,7 @@ def way_visualisation(object, way, funny_sound, anim, color = (0,255,0), thickne
                 cv2.waitKey(1)
 
 
-                time.sleep(0.2)
+                time.sleep(0.08)
 
             show_smth(field_mat[way[-2][0]][way[-2][1]], way[-2], object)
             show_smth("705" + str(dir), way[-1], object)
@@ -1061,9 +1061,10 @@ def way_to_commands_single(path,mat,my_dir):
     for i in dir_list:
         #обработка рамп
         if i == "su" or i == "sd": #проезд - рампа - проезд
-            res.append("X1")
+            # res.append("X1")
             res.append("F1" if i == "su" else "F0")
-            res.append("X1")
+            if i == "sd":
+                res.append("X1")
             continue
 
         if i == my_dir: #едем вперед если направление то же
