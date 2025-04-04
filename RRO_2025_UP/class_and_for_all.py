@@ -87,7 +87,7 @@ class MainComputer:
         self.robot_orientation = direction
 
     elevation = 1
-
+    cords_for_floor = [[290, 440], [640 - 290, 480]]
     @staticmethod
     def count_in_matrix(code, matrix):
         result = 0
@@ -145,11 +145,11 @@ class MainComputer:
         return frame_[massive2x2[0][1]:massive2x2[1][1], massive2x2[0][0]:massive2x2[1][0]]
 
     @staticmethod
-    def count_white(massive):
+    def count_white(massive, step=5):
         summa = 0
         summb = 0
-        for row in range(0, len(massive), 5):
-            for pixel in range(0, len(massive[row]), 5):
+        for row in range(0, len(massive), step):
+            for pixel in range(0, len(massive[row]), step):
                 if massive[row][pixel] > 0:
                     summa += 1
                 else:
@@ -268,14 +268,14 @@ class MainComputer:
 
         return result, message
 
-    def is_tile_white(self, tile):
+    def is_tile_white(self, tile, step=5):
         hsv = cv2.cvtColor(tile, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, downWhite, upWhite)
-        white_dots, black_dots = self.count_white(mask)
+        white_dots, black_dots = self.count_white(mask, step)
         return white_dots > black_dots
 
     def check_floor(self, frame):
-        if self.is_tile_white(frame):
+        if self.is_tile_white(self.from_cords_to_slice(frame, self.cords_for_floor),step=2):
             return 1
         return 2
 
