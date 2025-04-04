@@ -54,10 +54,12 @@ edge_cords = {1: (((220, 105), (420, 135)), ((170, 215), (470, 245)), ((200, 440
 
 interest_zones = {"higher": [[[[0, 190], [160, 360]], [[180, 170], [460, 350]], [[480, 190], [640, 360]]],
                              [[[90, 95], [215, 150]], [[240, 100], [400, 180]], [[425, 95], [550, 150]]]],
+
                   "same": [[[[20, 230], [180, 420]], [[200, 240], [440, 450]], [[460, 230], [620, 420]]],
                            [[[100, 125], [230, 220]], [[230, 120], [410, 220]], [[410, 125], [540, 220]]]],
-                  "lower": [[[[20, 250], [200, 450]], [[200, 250], [440, 480]], [[440, 250], [620, 450]]],
-                            [[[100, 155], [230, 250]], [[230, 140], [410, 250]], [[410, 155], [540, 250]]]]}
+
+                  "lower": [[[[60, 270], [220, 450]], [[220, 270], [420, 480]], [[420, 270], [580, 450]]],
+                            [[[120, 165], [230, 270]], [[230, 155], [410, 270]], [[410, 165], [520, 270]]]]}
 
 cords_for_white = {1: [[[[20, 210], [200, 400]], [[200, 210], [440, 430]], [[440, 210], [620, 400]]],
                        [[[100, 115], [215, 160]], [[0, 0], [0, 0]], [[440, 115], [550, 160]]]],
@@ -378,7 +380,7 @@ class MainComputer:
 
         for stroke in range(strokes_to_scan):
             for tile in range(len(elevation_differences[0])):
-                if visible[stroke][tile] == 0:
+                if visible[stroke][tile] == 0 or telemetry:
                     local_frame = self.from_cords_to_slice(frame, cords_for_white[self.elevation][stroke][tile])
 
                     _, __, wb, hb = self.search_for_color(
@@ -399,7 +401,9 @@ class MainComputer:
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]),
                             whites[stroke][tile])
 
-        self.update_map(visible, mat)
-
         if telemetry:
             return messages, elevation_differences
+
+        self.update_map(visible, mat)
+
+

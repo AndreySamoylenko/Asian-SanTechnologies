@@ -76,7 +76,7 @@ state = "button wait"
 timer_actions = 0
 flag = 0
 messages, flags = [[0] * 3] * 2, [[0] * 3] * 2
-
+mess = '  '
 counter = -1
 premoves = ['A0', 'a1', 'l1']
 
@@ -92,7 +92,6 @@ while 1:
             timer_actions = time.time()
 
     if state == "key reading":
-        mess = '  '
         if key in KEY_MAP.keys():
             key = KEY_MAP[key]
             if key == 'w' or key == 'up':
@@ -120,6 +119,7 @@ while 1:
             elif mess == 'f1':
                 mc.elevation = 2
             send("  ")
+            mess = '  '
             state = "wait for action to end"
 
     if state == "string reading":
