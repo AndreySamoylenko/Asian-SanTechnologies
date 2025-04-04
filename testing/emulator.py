@@ -26,59 +26,92 @@ class Emulator:
         self.robot_orientation = direction
 
     def reveal_2x3(self, field, visible):
-        height, width = 3, 3
-        if self.robot_orientation % 2:
-            offsets = [-1, -2 * (self.robot_orientation == 1) + (self.robot_orientation == 3)]
-            height = 2
-        else:
-            offsets = [-2 * (self.robot_orientation == 4) + (self.robot_orientation == 2), -1]
-            width = 2
+        height, width = 2, 3  # Default for horizontal orientation (1 or 3)
 
-        new_tiles_pos = [self.robot_position[0] + offsets[0], self.robot_position[1] + offsets[1]]
-        for x in range(new_tiles_pos[0], new_tiles_pos[0] + width):
-            for y in range(new_tiles_pos[1], new_tiles_pos[1] + height):
+        # Determine the offsets based on orientation
+        if self.robot_orientation % 2:  # 1 (up) or 3 (down)
+            if self.robot_orientation == 1:  # facing up
+                x_offset = -1
+                y_offset = -2
+            else:  # facing down (3)
+                x_offset = -1
+                y_offset = 1
+        else:  # 2 (right) or 4 (left)
+            height, width = 3, 2  # Switch to vertical rectangle
+            if self.robot_orientation == 2:  # facing right
+                x_offset = 1
+                y_offset = -1
+            else:  # facing left (4)
+                x_offset = -2
+                y_offset = -1
+
+        # Calculate starting position
+        start_x = self.robot_position[0] + x_offset
+        start_y = self.robot_position[1] + y_offset
+
+        # Ensure we stay within bounds
+        rows, cols = len(field), len(field[0])
+
+        for y in range(max(0, start_y), min(rows, start_y + height)):
+            for x in range(max(0, start_x), min(cols, start_x + width)):
                 if visible[y][x] == 0:
                     visible[y][x] = field[y][x]
 
     def move_robot_f(self, field):
-        new_pos = [0, 0]
+        # Get field dimensions
+        height = len(field)
+        width = len(field[0]) if height > 0 else 0
+
+        # Verify current position is valid
+        if not (0 <= self.robot_position[1] < height and
+                0 <= self.robot_position[0] < width):
+            print("Error: Robot is outside the field boundaries")
+            exit()
+
         old_tile = field[self.robot_position[1]][self.robot_position[0]]
-        if self.robot_orientation % 2:
+        new_pos = self.robot_position.copy()
+
+        # Calculate new position based on orientation
+        if self.robot_orientation % 2:  # 1 (up) or 3 (down)
             new_pos[1] += self.robot_orientation - 2
-        else:
+        else:  # 2 (right) or 4 (left)
             new_pos[0] += 3 - self.robot_orientation
 
+        # Check if new position is valid
+        if not (0 <= new_pos[1] < height and
+                0 <= new_pos[0] < width):
+            print("Error: Cannot move outside field boundaries")
+            exit(1)
+
         new_tile = field[new_pos[1]][new_pos[0]]
+
+        # Movement validation logic
         if new_tile == 0:
-            print("opa, you are trying to drive into undefined tile")
+            print("Error: Trying to move to undefined tile (0)")
+            exit()
         elif old_tile == 10:
-            if new_tile == 10:
-                self.robot_position = new_pos
-            elif new_tile == 30 + self.robot_orientation:
+            if new_tile == 10 or new_tile == 30 + self.robot_orientation:
                 self.robot_position = new_pos
             else:
-                print(f"you can't do that, you CAN'T go from {old_tile} to {new_tile} in this direction")
-                exit(1)
+                print(f"Invalid move: Cannot go from {old_tile} to {new_tile} (facing {self.robot_orientation})")
+                exit()
         elif old_tile == 20:
-            if new_tile == 20:
-                self.robot_position = new_pos
-            elif new_tile == 30 + (5 - self.robot_orientation):
+            if new_tile == 20 or new_tile == 30 + ((self.robot_orientation+2)-1)%4+1:
                 self.robot_position = new_pos
             else:
-                print(f"you can't do that, you CAN'T go from {old_tile} to {new_tile} in this direction")
-                exit(1)
-        elif old_tile // 10 == 3:
-            if abs(old_tile - new_tile) == 2:  # с рампы на рампу
-                self.robot_position = new_pos
-            elif old_tile == 30 + self.robot_orientation and new_tile == 20:
-                self.robot_position = new_pos
-            elif old_tile == 30 + (5 - self.robot_orientation) and new_tile == 10:
+                print(f"Invalid move: Cannot go from {old_tile} to {new_tile} (facing {self.robot_orientation})")
+                exit()
+        elif old_tile // 10 == 3:  # Ramp tiles (31-34)
+            if (abs(old_tile - new_tile) == 2 or  # Ramp-to-ramp
+                    (old_tile == 30 + self.robot_orientation and new_tile == 20) or
+                    (old_tile == 30 + (5 - self.robot_orientation) and new_tile == 10)):
                 self.robot_position = new_pos
             else:
-                print(f"you can't do that, you CAN'T go from {old_tile} to {new_tile} in this direction")
-                exit(1)
+                print(f"Invalid ramp move: Cannot go from {old_tile} to {new_tile}")
+                exit()
         else:
-            print()
+            print(f"Unknown tile type: {old_tile}")
+            exit()
 
     def turn_robot(self, way):
         self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
