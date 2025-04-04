@@ -96,7 +96,7 @@ class Emulator:
                 print(f"Invalid move: Cannot go from {old_tile} to {new_tile} (facing {self.robot_orientation})")
                 exit()
         elif old_tile == 20:
-            if new_tile == 20 or new_tile == 30 + ((self.robot_orientation+2)-1)%4+1:
+            if new_tile == 20 or new_tile == 30 + ((self.robot_orientation + 2) - 1) % 4 + 1:
                 self.robot_position = new_pos
             else:
                 print(f"Invalid move: Cannot go from {old_tile} to {new_tile} (facing {self.robot_orientation})")
@@ -104,7 +104,7 @@ class Emulator:
         elif old_tile // 10 == 3:  # Ramp tiles (31-34)
             if (abs(old_tile - new_tile) == 2 or  # Ramp-to-ramp
                     (old_tile == 30 + self.robot_orientation and new_tile == 20) or
-                    (old_tile == 30 + (5 - self.robot_orientation) and new_tile == 10)):
+                    (old_tile == 30 + ((self.robot_orientation - 1) + 2) % 4 + 1 and new_tile == 10)):
                 self.robot_position = new_pos
             else:
                 print(f"Invalid ramp move: Cannot go from {old_tile} to {new_tile}")
