@@ -125,17 +125,17 @@ class MainComputer:
                         # поворот зоны вставки
                         cords_insert = []
                         if self.robot_orientation == 1:
-                            cords_insert = [cords_of_tiles_on_map[0] + i,cords_of_tiles_on_map[1] + j]
+                            cords_insert = [cords_of_tiles_on_map[0] + i, cords_of_tiles_on_map[1] + j]
                         elif self.robot_orientation == 2:
-                            cords_insert = [cords_of_tiles_on_map[0] + j,cords_of_tiles_on_map[1] + (1 - i)]
+                            cords_insert = [cords_of_tiles_on_map[0] + j, cords_of_tiles_on_map[1] + (1 - i)]
                         elif self.robot_orientation == 3:
-                            cords_insert = [cords_of_tiles_on_map[0] + (1 - i),cords_of_tiles_on_map[1] + (2 - j)]
+                            cords_insert = [cords_of_tiles_on_map[0] + (1 - i), cords_of_tiles_on_map[1] + (2 - j)]
                         elif self.robot_orientation == 4:
-                            cords_insert = [cords_of_tiles_on_map[0] + (2 - j),cords_of_tiles_on_map[1] + i]
+                            cords_insert = [cords_of_tiles_on_map[0] + (2 - j), cords_of_tiles_on_map[1] + i]
                         else:
                             print("wrong direction")
 
-                        if mat[cords_insert[0]][cords_insert[1]]==0:
+                        if mat[cords_insert[0]][cords_insert[1]] == 0:
                             mat[cords_insert[0]][cords_insert[1]] = new_tiles[i][j]
         else:
             print("new_tiles wrong parameter")
@@ -179,6 +179,23 @@ class MainComputer:
                     x, y, w, h = x1, y1, w1, h1
 
         return x, y, w, h
+
+    def tube_crutch(self, frame_):
+        gray = cv2.cvtColor(frame_, cv2.COLOR_BGR2GRAY)
+        frame_height, frame_width = frame_.shape[:2]
+        differences = [[], []]
+        for x in range(0.2 * frame_width, 0.2 * frame_width - 1):
+            differences[0].append(gray[0.7 * frame_height][x] - gray[0.7 * frame_height][x + 1])
+
+        for y in range(0.2 * frame_height, 0.2 * frame_height - 1):
+            differences[1].append(gray[y][0.7 * frame_width] - gray[y + 1][0.7 * frame_width])
+
+        diffs1 = max(differences[0]) - min(differences[0])
+        diffs2 = max(differences[1]) - min(differences[1])
+
+        if abs((diffs1/diffs2)-1)>0.4:
+            return True
+        return False
 
     def look_at_tile(self, frame_, white_flag):
         message = "none"
@@ -309,7 +326,6 @@ class MainComputer:
             m15x15 = self.rotate_matrix(m15x15, 5 - self.robot_orientation)
             self.robot_orientation = 1
 
-
         new_pos = []
         for i in range(15):
             for j in range(15):
@@ -348,7 +364,7 @@ class MainComputer:
         width, height = 2 + self.robot_orientation % 2, 3 - self.robot_orientation % 2
         overall_cords = [[cords_of_tiles_on_map[0], cords_of_tiles_on_map[1]],
                          [cords_of_tiles_on_map[0] + width, cords_of_tiles_on_map[1] + height]]
-        return  self.from_cords_to_slice(mat,overall_cords)
+        return self.from_cords_to_slice(mat, overall_cords)
 
     def scan_frame(self, frame, mat):
         messages = [['a', 'b', 'c'], ['d', 'e', 'f']]
@@ -360,16 +376,17 @@ class MainComputer:
         edges = self.analyse_edges(frame)
         strokes_to_scan = 2
         if sum(edges):
-            if edges.index(1)<2:
+            if edges.index(1) < 2:
                 strokes_to_scan = edges.index(1)
 
         for stroke in range(strokes_to_scan):
             for tile in range(len(elevation_differences[0])):
-                if visible[stroke][tile]==0:
+                if visible[stroke][tile] == 0:
                     local_frame = self.from_cords_to_slice(frame, cords_for_white[self.elevation][stroke][tile])
 
                     _, __, wb, hb = self.search_for_color(
-                        cv2.cvtColor(self.from_cords_to_slice(frame, interest_zones[keys_[2 - self.elevation]][stroke][tile]), cv2.COLOR_BGR2HSV),
+                        cv2.cvtColor(self.from_cords_to_slice(frame, interest_zones[keys_[2 - self.elevation]][stroke][tile]),
+                                     cv2.COLOR_BGR2HSV),
                         downBlue, upBlue)
 
                     whites[stroke][tile] = self.is_tile_white(local_frame)
@@ -385,5 +402,4 @@ class MainComputer:
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]),
                             whites[stroke][tile])
 
-        self.update_map(visible,mat)
-
+        self.update_map(visible, mat)
