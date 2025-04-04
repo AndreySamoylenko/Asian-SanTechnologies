@@ -193,7 +193,7 @@ class MainComputer:
         diffs1 = max(differences[0]) - min(differences[0])
         diffs2 = max(differences[1]) - min(differences[1])
 
-        if abs((diffs1/diffs2)-1)>0.4:
+        if abs((diffs1 / diffs2) - 1) > 0.4:
             return True
         return False
 
@@ -275,12 +275,9 @@ class MainComputer:
         return white_dots > black_dots
 
     def check_floor(self, frame):
-        local_frame = self.from_cords_to_slice(frame, [[200, 240], [440, 450]])
-        res, _ = self.look_at_tile(local_frame, self.is_tile_white(local_frame))
-        if res == 10 or res == 31:
+        if self.is_tile_white(frame):
             return 1
-        elif res == 20 or res == 33:
-            return 2
+        return 2
 
     def edge_check(self, frame_):
         frame_height, frame_width = frame_.shape[:2]
