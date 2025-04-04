@@ -1,16 +1,15 @@
 import time
 
-import RobotAPI as rapi
 import cv2
-from basic_functions import *
 
+import RobotAPI as rapi
+from class_and_for_all import *
 
 # создаём объект для работы с камерой робота
 robot = rapi.RobotAPI(flag_serial=False)
 robot.set_camera(100, 640, 480)
 
-
-
+mc = MainComputer(position=[8, 8], direction=1)
 
 fps = 0
 fps_count = 0
@@ -45,7 +44,7 @@ while 1:
             elif key == 83:
                 mess = "X1"
             elif key == 49:
-                flag = (flag+1)%2
+                flag = (flag + 1) % 2
 
         if time.time() - timer_actions > 0.3:
             timer_actions = time.time()
@@ -71,8 +70,8 @@ while 1:
     robot.text_to_frame(frame, f"FPS: {fps}", 530, 20)
 
     # if flag:
-    cv2.rectangle(frame, (190,55),(450,85),(0,0,0),2)
-    cv2.rectangle(frame, (180,105),(460,135),(0,0,0),2)
-    cv2.rectangle(frame, (170,215),(470,245),(0,0,0),2)
+    cv2.rectangle(frame, (190, 55), (450, 85), (0, 0, 0), 2)
+    cv2.rectangle(frame, (180, 105), (460, 135), (0, 0, 0), 2)
+    cv2.rectangle(frame, (170, 215), (470, 245), (0, 0, 0), 2)
 
     robot.set_frame(frame, 40)
