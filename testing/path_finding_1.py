@@ -11,10 +11,8 @@ import cv2
 from emulator import Emulator
 import numpy as np
 from Future_engeneers_path_creation_new import *
-
-field_mat = np.array(
-[[20, 10, 10, 10, 10, 10, 71, 31], [10, 10, 10, 10, 10, 10, 10, 20], [42, 10, 20, 10, 20, 41, 33, 20], [20, 10, 10, 10, 20, 10, 31, 33], [20, 20, 20, 34, 20, 10, 10, 62], [20, 10, 10, 10, 33, 10, 10, 62], [20, 32, 20, 20, 20, 34, 10, 62], [33, 20, 10, 10, 20, 20, 52, 34]])
-
+mat = [[42, 10, 10, 10, 10, 10, 10, 10], [64, 10, 20, 10, 10, 34, 32, 10], [64, 10, 20, 20, 10, 10, 10, 10], [64, 10, 20, 20, 20, 34, 20, 41], [10, 10, 33, 20, 10, 10, 20, 20], [10, 10, 32, 20, 20, 20, 34, 71], [32, 52, 20, 34, 10, 10, 10, 10], [10, 20, 20, 34, 20, 20, 20, 34]]
+field_mat = np.array(mat)
 visible_mat = np.array([[0] * 8] * 8)
 
 weight_mat = np.array([[0] * 8] * 8)
@@ -102,56 +100,72 @@ def interest_calculation(field_mat, coef_mat):
 
     return result
 
-def scan_iteration(field_mat,pos,dir):
-    interest = interest_calculation(field_mat,coefficient_mat)
+
+def scan_iteration(field_mat, pos, dir):
+    obj = cv2.imread("white_picture.jpg")
+    interest = interest_calculation(field_mat, coefficient_mat)
+    pos = robot.robot_position
+    waves = wave_ini((pos[0], pos[1]), neighbour_ini(field_mat))
+    waves_all = []
+    for i in waves:
+        waves_all += i
 
     # ------------------- cell to go calculating -------------------#
     revealed = np.array([[0 if cell == 0 else 1 for cell in row] for row in field_mat])
     cords = {}
     for i in range(len(field_mat)):
         for j in range(len(field_mat)):
-            cords[(i,j)] = int(revealed[i][j])*int(interest[i][j])
-            interest[i][j] = int(revealed[i][j])*int(interest[i][j])
-
+            cords[(i, j)] = int(revealed[i][j]) * int(interest[i][j])
+            interest[i][j] = int(revealed[i][j]) * int(interest[i][j])
 
     way = []
-
-    good, bad = split_dict_by_values_optimized(cords,field_mat)
-    good = sort_coords_by_matrix_values(good,interest)
+    good, bad = split_dict_by_values_optimized(cords, field_mat)
+    good = sort_coords_by_matrix_values(good, interest)
     bad = sort_coords_by_matrix_values(bad, interest)
 
     while not way:
-
-
-        if interest[good[0]] > 0:
+        # Prioritize good cells first
+        if good and interest[good[0][0]][good[0][1]] > 0:  # Fixed indexing here
             to_go = good[0]
             flag = "good"
-        else:
+        elif bad and interest[bad[0][0]][bad[0][1]] > 0:  # Fixed indexing here
             to_go = bad[0]
             flag = "bad"
+        else:
+            # No interesting cells left
+            pos = robot.robot_position
+            if field_mat[pos[0]][pos[1]] == 20:
+                print_colored("waves_calculation")
+                waves = wave_ini(robot.robot_position, neighbour_ini(field_mat))
+                print(waves)
+
+            field_mat[field_mat == 0] = 99
+            print(field_mat)
+            print(create_path(replace_ints_in_matrix(field_mat), 1))
+            return None  # Added return to prevent infinite loop
 
         con_dict = neighbour_ini(replace_ints_in_matrix(field_mat))
+        waves = wave_ini((pos[1], pos[0]), con_dict)
 
-        waves = wave_ini((pos[1],pos[0]),con_dict)
-        obj = cv2.imread("white_picture.jpg")  # картинка для фона
-
-        ini(obj,replace_ints_in_matrix(visible_mat))
-        wave_visual(waves,obj)
+        ini(obj, replace_ints_in_matrix(visible_mat))
+        wave_visual(waves, obj)
         cv2.imshow("map", cv2.resize(obj, (600, 600)))
         cv2.waitKey(1)
 
-        way = wave_back_way(waves,(pos[1],pos[0]),to_go,con_dict,0,obj,field_mat)
-        print("way", way)
-        if way and str(field_mat[to_go[0]][to_go[1]])[0] != 3:
+        way = wave_back_way(waves, (pos[1], pos[0]), to_go, con_dict, 0, obj, field_mat)
 
-            way_visualisation(obj,way[0],0,1,(0,255,0),10,0,replace_ints_in_matrix(field_mat))
-            way = way_to_commands_single(way[0],replace_ints_in_matrix(field_mat),int_to_dir(dir))[0]
+        if way and str(field_mat[to_go[0]][to_go[1]])[0] != '3':
+            way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+            way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(dir))[0]
             return way
         else:
+            # Remove unreachable point and try again
             if flag == "good":
                 good.pop(0)
+                print("Removed unreachable good point:", to_go)
             else:
                 bad.pop(0)
+                print("Removed unreachable bad point:", to_go)
 
 def full_scan(mat,robot):
 
@@ -168,31 +182,10 @@ def full_scan(mat,robot):
     real_to_emu(robot, "R1", mat)
 
     robot.show_map(visible_mat,0)
-    time.sleep(0.2)
-
-    # ------------------- solution ability checking -------------------#
-    # tubes = [[1 if (cell > 40 and cell < 53) else 0 for cell in row] for row in mat]
-    # if (sum([element for row in tubes for element in row])) == 3:
-    #
-    #     to_unload = [[1 if cell > 60 else 0 for cell in row] for row in mat]
-    #     if (sum([element for row in to_unload for element in row])) > 2:
-    #
-    #         # one digit mat values may cause some issues
-    #         mat[mat == 0] = 99
-    #
-    #         mat[robot.robot_position[0]][robot.robot_position[1]] = 71
-    #
-    #         ini_for_nerds(replace_ints_in_matrix(mat))
-    #         way = 1
-    #         if way:
-    #             # return [1, mat]
-    #             pass
-    #         else:
-    #             print_colored("Seems like this thing is impossible to solve tbh", "red")
-    #             return exit()
+    time.sleep(0.05)
 
     # надо придумать каким образом починить эту затычку
-    visible_mat[robot.robot_position[0]][robot.robot_position[1]] = 10
+    # visible_mat[robot.robot_position[0]][robot.robot_position[1]] = 10
 
     if np.any(mat == 0):
         real_to_emu(robot,scan_iteration(visible_mat,robot.robot_position,robot.robot_orientation),visible_mat)
@@ -234,7 +227,7 @@ def real_to_emu(emulator, commands, field):
         emulator.reveal_2x3(field_mat,visible_mat)
         # print(emulator.robot_position, emulator.robot_orientation)
         emulator.show_map(visible_mat,0)
-        time.sleep(0.1)
+        time.sleep(0.03)
 
 def int_to_dir(int):
     if int == 1: return "U"
@@ -247,6 +240,10 @@ def int_to_dir(int):
 
 pos = robot_pos_finder(replace_ints_in_matrix(field_mat))
 robot = Emulator()
+robot.robot_position = [pos[1],pos[0]]
+
+visible_mat[pos[0],pos[1]] = 10
+
 while 1 :
     mat = full_scan(visible_mat,robot)
     if mat[0] != 0:
