@@ -2,16 +2,14 @@ import os
 import time
 
 import RobotAPI as rapi
-import cv2
-import numpy as np
-
-from basic_functions import *
-
 from Future_engeneers_path_creation_new import create_path
+from class_and_for_all import *
 
 # создаём объект для работы с камерой робота
 robot = rapi.RobotAPI(flag_serial=False)
 robot.set_camera(100, 640, 480)
+
+mc = MainComputer(position=[8, 8], direction=1)
 
 
 def drawMap(map__frame, matrix):
@@ -31,44 +29,24 @@ t = time.time()
 color = (255, 255, 255)  # белый цвет (B, G, R)
 map_frame = np.full((800, 800, 3), color, dtype=np.uint8)
 
-mat = [[52, 20, 20, 34, 10, 20, 10, 42], [10, 10, 20, 20, 34, 20, 10, 62], [32, 20, 20, 34, 20, 10, 10, 62],
-       [10, 10, 20, 20, 20, 34, 10, 62], [10, 10, 32, 20, 20, 20, 34, 20], [71, 10, 10, 10, 10, 10, 10, 20],
-       [10, 10, 42, 10, 20, 10, 10, 33], [10, 10, 34, 32, 10, 20, 10, 10]]
+mat = [[52, 20, 20, 34, 10, 20, 10, 42],
+       [10, 10, 20, 20, 34, 20, 10, 62],
+       [32, 20, 20, 34, 20, 10, 10, 62],
+       [10, 10, 20, 20, 20, 34, 10, 62],
+       [10, 10, 32, 20, 20, 20, 34, 20],
+       [71, 10, 10, 10, 10, 10, 10, 20],
+       [10, 10, 42, 10, 20, 10, 10, 33],
+       [10, 10, 34, 32, 10, 20, 10, 10]]
 
-
-def transponation(matrix):
-    matrix1 = [[61, 61, 61, 10, 10, 10, 42, 10],
-               [10, 10, 10, 10, 20, 20, 20, 34],
-               [10, 10, 20, 33, 10, 33, 10, 10],
-               [10, 10, 20, 20, 10, 51, 10, 10],
-               [10, 10, 20, 20, 10, 20, 10, 10],
-               [71, 33, 41, 20, 20, 20, 34, 10],
-               [20, 31, 10, 31, 10, 10, 10, 10],
-               [10, 10, 10, 10, 10, 20, 10, 10]]
-    for i in range(len(matrix)):
-        for j in range(len(matrix[i])):
-            matrix1[i][j] = matrix[j][i]
-    return matrix1
-
-
-list_of_motions = []
 list_of_motions = create_path(mat, [0, 0, 0, 0, 0, 0, 1])
+list_of_motions = ['A0', 'a1', 'l1'] + list_of_motions + ['OO']
 
-# list_of_motions = ["L1","X4","L1","X2","L1","X1","R1","G1","L1","X3","L1","G1","R2","X1","L1","X1","L1","F1","X3","L1","G1","R1","F0",
-#                    "X1","P1","L1","X1","R1","P1","R1","X2","L1","P1","OO"]
-
-# list_of_motions = ["x1", "r1", "x1", "r1", "f1", "f0", "OO", "x1", "R1", "X1", "L1", "X1", "G1",
-#                    "x1", "R1", "X1", "L1", "F1", "X1", "R1", "X2", "L1", "X1", "G1",
-#                    "x1", "L1", "X2", "R1", "X2", "F0", "X2", "R1", "X2", "G1",
-#                    "x2", "R1", "X1", "R1", "X1", "R1", "P1", "L1", "X1", "R1", "P1", "L1", "X1", "R1", "P1"]
-#
-# list_of_motions = ["T3","X1", "R1", "P1", "L1", "X1", "R1", "P1", "L1", "X1", "R1", "P1"]
-
-list_of_motions.append("OO")
 counter = -1
 
 state = "button wait"
 timer_actions = 0
+
+floor = 0
 while 1:
     frame = robot.get_frame(wait_new_frame=1)
 
@@ -91,9 +69,18 @@ while 1:
 
     if state == "wait for action to end":
         if not digitalRead():
-            state = "string reading"
+            if list_of_motions[counter] != 'A0':
+                state = "string reading"
+            else:
+                state = "floor checking"
             counter += 1
             counter %= len(list_of_motions)
+
+    if state == "floor checking":
+        floor = mc.check_floor(mc.from_cords_to_slice(frame, [[270, 420], [640 - 270, 480]]))
+        list_of_motions[1] = f'a{floor}'
+        print(floor)
+        state = "string reading"
 
     fps_count += 1
     if time.time() > t + 1:
