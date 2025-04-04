@@ -2,10 +2,7 @@ import os
 import time
 
 import RobotAPI as rapi
-from RobotAPI import RobotAPI
-
-from basic_functions import *
-from cv import *
+from class_and_for_all import *
 
 # создаём объект для работы с камерой робота
 
@@ -15,6 +12,8 @@ robot.set_camera(100, 640, 480)
 # Создаём пустое изображение (в формате BGR)
 color = (255, 255, 255)  # белый цвет (B, G, R)
 map_frame = np.full((750, 750, 3), color, dtype=np.uint8)
+
+mc = MainComputer(position=[8, 8], direction=1)
 
 field_map_predv = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -89,49 +88,22 @@ flags = [[0] * 3] * 2
 next_move = ''
 state = 'button wait'
 
-while 1:
-    fps_count += 1
+counter = 0
+premoves = ['A0', 'a1', 'l1']
 
-    if time.time() - t > 1:
-        # print(flags)
-        fps = fps_count
-        fps_count = 0
-        t = time.time()
+while 1:
 
     if state == "button wait":
         send("99")
         if digitalRead():
             send("B0")
-            state = "scan"
+            state = "string reading"
             timer_actions = time.time()
-            time.sleep(2)
 
     if state == 'scan':
         frame = robot.get_frame(wait_new_frame=1)
-        edges = analyse_edges(frame, floor)
-        prev_matrix, messages, flags = scanTheFrame(frame, floor)
-
-        updateMap(prev_matrix, field_map_predv, current_position, current_orientation)
-        # print(prev_matrix[1][1])
-        if (isTileValid(prev_matrix[1][1], floor)  # если мы можем проехать вперёд и клетка справа относительно робота сканирована
-                and field_map_predv[current_position[0] + ((current_orientation - 1) % 2) * (3 - current_orientation)]
-                [current_position[1] + (current_orientation % 2) * (2 - current_orientation)]):
-            if prev_matrix[1][1] % 10 == 0:
-                next_move = "x1"
-            elif floor == 1:
-                floor = 2
-                next_move = 'f1'
-            elif floor == 2:
-                floor = 1
-                next_move = 'f0'
-
-            current_position[0] += (current_orientation % 2) * (2 - current_orientation)
-            current_position[1] -= ((current_orientation - 1) % 2) * (3 - current_orientation)
-
-        else:
-            next_move = "r1"
-            current_orientation = current_orientation % 4 + 1
-
+        edges = mc.analyse_edges(frame)
+        mc.scan_frame(frame, field_map_predv)
         state = 'message sending'
 
     if state == "message sending":
@@ -143,9 +115,39 @@ while 1:
             send("  ")
             state = "wait for action to end"
 
+    if state == "string reading":
+        if time.time() - timer_actions > 0.5:
+            timer_actions = time.time()
+            send(premoves[counter])
+
+        if digitalRead():
+            send("  ")
+            state = "wait for action to end"
+
     if state == "wait for action to end":
         if not digitalRead():
-            state = "scan"
+            if counter + 1 < len(premoves):
+                if premoves[counter] != 'A0':
+                    state = "string reading"
+                else:
+                    state = "floor checking"
+                counter += 1
+            else:
+                state = "scan"
+
+    if state == "floor checking":
+        floor = mc.check_floor(frame)
+        mc.elevation = floor
+        premoves[1] = f'a{floor}'
+        print(mc.elevation)
+        state = "string reading"
+
+    fps_count += 1
+
+    if time.time() - t > 1:
+        fps = fps_count
+        fps_count = 0
+        t = time.time()
 
     drawMap(map_frame, field_map_predv)
     # drawTelemetry(frame, zones=True, text=True)
