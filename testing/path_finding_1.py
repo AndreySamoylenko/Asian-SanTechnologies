@@ -1,18 +1,18 @@
-"""
-каждой клетке присваивается значение веса, равное количеству новых клеток которых можно увидеть из этой клетки
-едем в сторону клетки с наибольшим весом
 
-(возможно добавим краям веса)
-"""
+import math
 import time
 
 import cv2
-
+from exel_stuff import *
 from emulator import Emulator
 import numpy as np
 from Future_engeneers_path_creation_new import *
-mat = [[42, 10, 10, 10, 10, 10, 10, 10], [64, 10, 20, 10, 10, 34, 32, 10], [64, 10, 20, 20, 10, 10, 10, 10], [64, 10, 20, 20, 20, 34, 20, 41], [10, 10, 33, 20, 10, 10, 20, 20], [10, 10, 32, 20, 20, 20, 34, 71], [32, 52, 20, 34, 10, 10, 10, 10], [10, 20, 20, 34, 20, 20, 20, 34]]
+
+mat = rand_pat_from_file()
+mat = string_to_list(mat)
 field_mat = np.array(mat)
+# print(field_mat)
+
 visible_mat = np.array([[0] * 8] * 8)
 
 weight_mat = np.array([[0] * 8] * 8)
@@ -28,16 +28,6 @@ coefficient_mat1 = np.array([[1, 1, 1],
                              ])
 
 def sort_coords_by_matrix_values(coords, matrix):
-    """
-    Сортирует координаты по значениям в матрице в порядке убывания
-
-    Args:
-        coords: Список координат в формате [(row1, col1), (row2, col2), ...]
-        matrix: 2D матрица (NumPy array или список списков)
-
-    Returns:
-        Список координат, отсортированных по убыванию значений в матрице
-    """
     # Проверяем, является ли matrix numpy array, если нет - преобразуем
     if not isinstance(matrix, np.ndarray):
         matrix = np.array(matrix)
@@ -60,9 +50,6 @@ def sort_coords_by_matrix_values(coords, matrix):
     return sorted_coords
 
 def split_dict_by_values_optimized(coord_dict, matrix):
-    """
-    Оптимизированная версия с использованием list comprehensions
-    """
     coords_10 = [
         coord for coord in coord_dict
         if coord[0] < len(matrix) and
@@ -100,15 +87,57 @@ def interest_calculation(field_mat, coef_mat):
 
     return result
 
+def ramp_pair_finder(mat):
+    possible_pairs = []
+    # print(mat)
 
-def scan_iteration(field_mat, pos, dir):
-    obj = cv2.imread("white_picture.jpg")
+    for i in range(len(mat)-1):
+        for j in range(len(mat)-1):
+            if mat[i][j] + mat[i+1][j] == 64 and (mat[i][j]!= 0 and mat[i][j] != 64):
+                possible_pairs.append([(i,j), (i+1,j)])
+            elif mat[i][j] + mat[i][j+1] == 66:
+                possible_pairs.append([(i,j), (i,j+1)])
+
+    for i in possible_pairs:
+        if borders_with_zero(mat, i[0]):
+            return i[0]
+        elif borders_with_zero(mat, i[1]):
+            return i[1]
+
+def borders_with_zero(mat, coord):
+    y, x = coord  # распаковываем координаты
+    rows = len(mat)
+    if rows == 0:
+        return False
+    cols = len(mat[0])
+
+    # Проверяем соседние клетки (верх, низ, лево, право)
+    for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        ny = y + dy
+        nx = x + dx
+        if 0 <= ny < rows and 0 <= nx < cols:
+            if mat[ny][nx] == 0:
+                return True
+    return False
+
+def borders_with_tube(mat, coord):
+    y, x = coord  # распаковываем координаты
+    rows = len(mat)
+    if rows == 0:
+        return False
+    cols = len(mat[0])
+
+    # Проверяем соседние клетки (верх, низ, лево, право)
+    for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        ny = y + dy
+        nx = x + dx
+        if 0 <= ny < rows and 0 <= nx < cols:
+            if str(mat[ny][nx])[0] == "5" or str(mat[ny][nx])[0] == "4" or str(mat[ny][nx])[0] == "6":
+                return True
+    return False
+
+def scan_iteration(field_mat, pos, dir, obj):
     interest = interest_calculation(field_mat, coefficient_mat)
-    pos = robot.robot_position
-    waves = wave_ini((pos[0], pos[1]), neighbour_ini(field_mat))
-    waves_all = []
-    for i in waves:
-        waves_all += i
 
     # ------------------- cell to go calculating -------------------#
     revealed = np.array([[0 if cell == 0 else 1 for cell in row] for row in field_mat])
@@ -124,73 +153,170 @@ def scan_iteration(field_mat, pos, dir):
     bad = sort_coords_by_matrix_values(bad, interest)
 
     while not way:
+        # Check if we have any points left to consider
+        if not good and not bad:
+            # Handle case when no points are left
+            tubes = np.char.startswith(field_mat.astype(str), '4')
+            tubes = np.sum(tubes)
+
+            tubes_1 = np.char.startswith(field_mat.astype(str), '5')
+            tubes_1 = np.sum(tubes_1)
+
+
+            to_unload = np.char.startswith(field_mat.astype(str), '6')
+            to_unload = np.sum(to_unload)
+
+            if tubes + tubes_1 + to_unload < 6:
+                print_colored("our last chance", "red")
+                print(field_mat)
+                print("\n\n", tubes, to_unload)
+                to_go = ramp_pair_finder(field_mat)
+                # cv2.waitKey()
+
+                con_dict = neighbour_ini(replace_ints_in_matrix(field_mat))
+                waves = wave_ini((pos[1], pos[0]), con_dict)
+                way = wave_back_way(waves, (pos[1], pos[0]), to_go, con_dict, 0, obj, field_mat)
+                print(way)
+
+                ini(obj, replace_ints_in_matrix(visible_mat))
+                wave_visual(waves, obj)
+                cv2.imshow("map", cv2.resize(obj, (600, 600)))
+                cv2.waitKey(1)
+
+                way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+                way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(robot.robot_orientation))[0]
+                way += "X1"
+                return  way
+            else:
+                return "scanned"
+
         # Prioritize good cells first
-        if good and interest[good[0][0]][good[0][1]] > 0:  # Fixed indexing here
+        if good and interest[good[0][0]][good[0][1]] > 0:
             to_go = good[0]
             flag = "good"
-        elif bad and interest[bad[0][0]][bad[0][1]] > 0:  # Fixed indexing here
+        elif bad and interest[bad[0][0]][bad[0][1]] > 0:
             to_go = bad[0]
             flag = "bad"
         else:
-            # No interesting cells left
-            pos = robot.robot_position
-            if field_mat[pos[0]][pos[1]] == 20:
-                print_colored("waves_calculation")
-                waves = wave_ini(robot.robot_position, neighbour_ini(field_mat))
-                print(waves)
-
-            field_mat[field_mat == 0] = 99
-            print(field_mat)
-            print(create_path(replace_ints_in_matrix(field_mat), 1))
-            return None  # Added return to prevent infinite loop
+            # If we get here, it means we have lists but all points have interest <= 0
+            # We should remove these points and try again
+            if good:
+                good.pop(0)
+                continue
+            if bad:
+                bad.pop(0)
+                continue
 
         con_dict = neighbour_ini(replace_ints_in_matrix(field_mat))
         waves = wave_ini((pos[1], pos[0]), con_dict)
 
-        ini(obj, replace_ints_in_matrix(visible_mat))
-        wave_visual(waves, obj)
-        cv2.imshow("map", cv2.resize(obj, (600, 600)))
-        cv2.waitKey(1)
-
         way = wave_back_way(waves, (pos[1], pos[0]), to_go, con_dict, 0, obj, field_mat)
 
         if way and str(field_mat[to_go[0]][to_go[1]])[0] != '3':
+            ini(obj, replace_ints_in_matrix(visible_mat))
+            wave_visual(waves, obj)
+            cv2.imshow("map", cv2.resize(obj, (600, 600)))
+            cv2.waitKey(1)
+
             way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
             way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(dir))[0]
             return way
         else:
             # Remove unreachable point and try again
-            if flag == "good":
+            if flag == "good" and good:  # Added check for non-empty list
                 good.pop(0)
                 print("Removed unreachable good point:", to_go)
-            else:
+            elif bad:  # Added check for non-empty list
                 bad.pop(0)
                 print("Removed unreachable bad point:", to_go)
+            else:
+                print("No more points to try")
+                return None
 
 def full_scan(mat,robot):
+    obj = cv2.imread("white_picture.jpg")
 
-    robot.reveal_2x3(mat,visible_mat)
-    real_to_emu(robot,"R1",mat)
+    way_to_scan = scan_iteration(visible_mat,robot.robot_position,robot.robot_orientation, obj)
+    if  way_to_scan != "scanned":
+        real_to_emu(robot,way_to_scan,visible_mat)
 
-    robot.reveal_2x3(mat,visible_mat)
-    real_to_emu(robot,"R1",mat)
+        robot.reveal_2x3(mat, visible_mat)
+        real_to_emu(robot, "R1", mat)
 
-    robot.reveal_2x3(mat, visible_mat)
-    real_to_emu(robot, "R1", mat)
+        robot.reveal_2x3(mat, visible_mat)
+        real_to_emu(robot, "R1", mat)
 
-    robot.reveal_2x3(mat, visible_mat)
-    real_to_emu(robot, "R1", mat)
+        robot.reveal_2x3(mat, visible_mat)
+        real_to_emu(robot, "R1", mat)
 
-    robot.show_map(visible_mat,0)
-    time.sleep(0.05)
+        robot.reveal_2x3(mat, visible_mat)
+        real_to_emu(robot, "R1", mat)
 
-    # надо придумать каким образом починить эту затычку
-    # visible_mat[robot.robot_position[0]][robot.robot_position[1]] = 10
+        robot.show_map(visible_mat, 0)
+        time.sleep(0.05)
 
-    if np.any(mat == 0):
-        real_to_emu(robot,scan_iteration(visible_mat,robot.robot_position,robot.robot_orientation),visible_mat)
-        return [0]
-    return [1, mat]
+    else:
+        print_colored("Lets start our solution", "green")
+        pos = robot.robot_position
+
+        if mat[pos[1]][pos[0]] == 20:
+            waves = wave_ini((pos[1],pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
+
+            closest_1st_f = []
+            for i in waves:
+                for j in i:
+                    if mat[j[0]][j[1]] == 10:
+                        closest_1st_f = j
+                        break
+                if closest_1st_f:
+                    break
+
+            print(closest_1st_f)
+            way = wave_back_way(waves, (pos[1],pos[0]), closest_1st_f, neighbour_ini(replace_ints_in_matrix(mat)), 0 ,obj,replace_ints_in_matrix(mat),0)
+            way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+            # cv2.waitKey()
+            way = way_to_commands_single(way[0],mat,int_to_dir(robot.robot_orientation))
+            real_to_emu(robot,way[0],mat)
+
+        pos = robot.robot_position
+
+        if borders_with_tube(mat, (pos[1], pos[0])):
+            waves = wave_ini((pos[1], pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
+
+            closest_no_t = []
+            for i in waves:
+                for j in i:
+                    if not borders_with_tube(mat, (j[0], j[1])):
+                        closest_no_t = j
+                        break
+                if closest_no_t:
+                    break
+
+            way = wave_back_way(waves, (pos[1], pos[0]), closest_no_t, neighbour_ini(replace_ints_in_matrix(mat)),
+                                0, obj, replace_ints_in_matrix(mat), 0)
+            way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+            cv2.waitKey()
+            way = way_to_commands_single(way[0], replace_ints_in_matrix(mat), int_to_dir(robot.robot_orientation))
+            real_to_emu(robot, way[0], mat)
+            pos = robot.robot_position
+
+
+        mat[mat == 0] = 99
+        mat[pos[1]][pos[0]] = 71
+        while robot.robot_orientation != 1:
+            robot.turn_robot(1)
+
+        ini_for_nerds(replace_ints_in_matrix(mat))
+        # cv2.waitKey()
+
+
+        way = create_path(mat, 1)
+        print(way)
+        if way:
+            return way , 1
+        else:
+            print_colored("Failed to solve, seems like wrong scan", "red")
+            return
 
 def real_to_emu(emulator, commands, field):
     """
@@ -244,12 +370,28 @@ robot.robot_position = [pos[1],pos[0]]
 
 visible_mat[pos[0],pos[1]] = 10
 
+robot.reveal_2x3(mat,visible_mat)
+
+real_to_emu(robot,"R1",mat)
+
+robot.reveal_2x3(mat,visible_mat)
+real_to_emu(robot,"R1",mat)
+
+robot.reveal_2x3(mat, visible_mat)
+real_to_emu(robot, "R1", mat)
+
+robot.reveal_2x3(mat, visible_mat)
+real_to_emu(robot, "R1", mat)
+
+robot.show_map(visible_mat,0)
+time.sleep(0.05)
 while 1 :
     mat = full_scan(visible_mat,robot)
-    if mat[0] != 0:
+    if mat:
         break
 
-create_path(mat[1])
+print(mat[0])
+
 
 
 # scan_iteration(interest_calculation(field_mat,coefficient_mat),field_mat,(3,5),1)

@@ -1055,7 +1055,7 @@ def way_to_commands_single(path,mat,my_dir):
         dir_list.append(dir)
 
     res = []
-    # print("dir list:",dir_list)
+    print("dir list:",dir_list)
     # print("facing:", my_dir)
 
     for i in dir_list:
@@ -1063,6 +1063,7 @@ def way_to_commands_single(path,mat,my_dir):
         if i == "su" or i == "sd": #проезд - рампа - проезд
             # res.append("X1")
             res.append("F1" if i == "su" else "F0")
+
             if i == "sd":
                 res.append("X1")
             continue
@@ -1076,7 +1077,7 @@ def way_to_commands_single(path,mat,my_dir):
             res.append(get_rotation_direction(my_dir,i)) #делаем поворот и едем вперед при смене направления
             res.append("X1")
             my_dir = i
-    # print("res:",res)
+    print("res:",res)
     return res, my_dir
 
 
