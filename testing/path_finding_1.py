@@ -1,7 +1,6 @@
 
 import math
 import time
-
 import cv2
 from exel_stuff import *
 from emulator import Emulator
@@ -11,7 +10,6 @@ from Future_engeneers_path_creation_new import *
 mat = rand_pat_from_file()
 mat = string_to_list(mat)
 field_mat = np.array(mat)
-# print(field_mat)
 
 visible_mat = np.array([[0] * 8] * 8)
 
@@ -168,8 +166,8 @@ def scan_iteration(field_mat, pos, dir, obj):
 
             if tubes + tubes_1 + to_unload < 6:
                 print_colored("our last chance", "red")
-                print(field_mat)
-                print("\n\n", tubes, to_unload)
+                # print(field_mat)
+                # print("\n\n", tubes, to_unload)
                 to_go = ramp_pair_finder(field_mat)
                 # cv2.waitKey()
 
@@ -235,88 +233,75 @@ def scan_iteration(field_mat, pos, dir, obj):
 
 def full_scan(mat,robot):
     obj = cv2.imread("white_picture.jpg")
+    way_to_scan = []
+    # visible_mat[pos[0], pos[1]] = [10 if real_robot.check_floor() == 1 else 20]
+    visible_mat[pos[0], pos[1]] = 10
 
-    way_to_scan = scan_iteration(visible_mat,robot.robot_position,robot.robot_orientation, obj)
-    if  way_to_scan != "scanned":
+    for i in range(1, 4):
+        robot.reveal_2x3(mat, visible_mat)
+        real_to_emu(robot, "R1", mat)
+
+    while  way_to_scan != "scanned":
+
+        way_to_scan = scan_iteration(visible_mat, robot.robot_position, robot.robot_orientation, obj)
         real_to_emu(robot,way_to_scan,visible_mat)
 
-        robot.reveal_2x3(mat, visible_mat)
-        real_to_emu(robot, "R1", mat)
+        for i in range(1,4):
+            robot.reveal_2x3(mat, visible_mat)
+            real_to_emu(robot, "R1", mat)
 
-        robot.reveal_2x3(mat, visible_mat)
-        real_to_emu(robot, "R1", mat)
+    return mat
 
-        robot.reveal_2x3(mat, visible_mat)
-        real_to_emu(robot, "R1", mat)
+def some_logic_fixes(mat,robot):
+    obj = cv2.imread("white_picture.jpg")
+    print_colored("Lets fix some issues", "green")
+    pos = robot.robot_position
 
-        robot.reveal_2x3(mat, visible_mat)
-        real_to_emu(robot, "R1", mat)
+    if mat[pos[1]][pos[0]] == 20:
+        waves = wave_ini((pos[1],pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
 
-        robot.show_map(visible_mat, 0)
-        time.sleep(0.05)
+        closest_1st_f = []
+        for i in waves:
+            for j in i:
+                if mat[j[0]][j[1]] == 10:
+                    closest_1st_f = j
+                    break
+            if closest_1st_f:
+                break
 
-    else:
-        print_colored("Lets start our solution", "green")
+        way = wave_back_way(waves, (pos[1],pos[0]), closest_1st_f, neighbour_ini(replace_ints_in_matrix(mat)), 0 ,obj,replace_ints_in_matrix(mat),0)
+        way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+        way = way_to_commands_single(way[0],mat,int_to_dir(robot.robot_orientation))
+        real_to_emu(robot,way[0],mat)
+
+    pos = robot.robot_position
+
+    if borders_with_tube(mat, (pos[1], pos[0])):
+        waves = wave_ini((pos[1], pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
+
+        closest_no_t = []
+        for i in waves:
+            for j in i:
+                if not borders_with_tube(mat, (j[0], j[1])):
+                    closest_no_t = j
+                    break
+            if closest_no_t:
+                break
+
+        way = wave_back_way(waves, (pos[1], pos[0]), closest_no_t, neighbour_ini(replace_ints_in_matrix(mat)),
+                            0, obj, replace_ints_in_matrix(mat), 0)
+        way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+        way = way_to_commands_single(way[0], replace_ints_in_matrix(mat), int_to_dir(robot.robot_orientation))
+        real_to_emu(robot, way[0], mat)
         pos = robot.robot_position
 
-        if mat[pos[1]][pos[0]] == 20:
-            waves = wave_ini((pos[1],pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
 
-            closest_1st_f = []
-            for i in waves:
-                for j in i:
-                    if mat[j[0]][j[1]] == 10:
-                        closest_1st_f = j
-                        break
-                if closest_1st_f:
-                    break
+    mat[mat == 0] = 99
+    mat[pos[1]][pos[0]] = 71
+    while robot.robot_orientation != 1:
+        robot.turn_robot(1)
 
-            print(closest_1st_f)
-            way = wave_back_way(waves, (pos[1],pos[0]), closest_1st_f, neighbour_ini(replace_ints_in_matrix(mat)), 0 ,obj,replace_ints_in_matrix(mat),0)
-            way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
-            # cv2.waitKey()
-            way = way_to_commands_single(way[0],mat,int_to_dir(robot.robot_orientation))
-            real_to_emu(robot,way[0],mat)
-
-        pos = robot.robot_position
-
-        if borders_with_tube(mat, (pos[1], pos[0])):
-            waves = wave_ini((pos[1], pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
-
-            closest_no_t = []
-            for i in waves:
-                for j in i:
-                    if not borders_with_tube(mat, (j[0], j[1])):
-                        closest_no_t = j
-                        break
-                if closest_no_t:
-                    break
-
-            way = wave_back_way(waves, (pos[1], pos[0]), closest_no_t, neighbour_ini(replace_ints_in_matrix(mat)),
-                                0, obj, replace_ints_in_matrix(mat), 0)
-            way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
-            cv2.waitKey()
-            way = way_to_commands_single(way[0], replace_ints_in_matrix(mat), int_to_dir(robot.robot_orientation))
-            real_to_emu(robot, way[0], mat)
-            pos = robot.robot_position
-
-
-        mat[mat == 0] = 99
-        mat[pos[1]][pos[0]] = 71
-        while robot.robot_orientation != 1:
-            robot.turn_robot(1)
-
-        ini_for_nerds(replace_ints_in_matrix(mat))
-        # cv2.waitKey()
-
-
-        way = create_path(mat, 1)
-        print(way)
-        if way:
-            return way , 1
-        else:
-            print_colored("Failed to solve, seems like wrong scan", "red")
-            return
+    return mat
 
 def real_to_emu(emulator, commands, field):
     """
@@ -368,41 +353,13 @@ pos = robot_pos_finder(replace_ints_in_matrix(field_mat))
 robot = Emulator()
 robot.robot_position = [pos[1],pos[0]]
 
-visible_mat[pos[0],pos[1]] = 10
-
-robot.reveal_2x3(mat,visible_mat)
-
-real_to_emu(robot,"R1",mat)
-
-robot.reveal_2x3(mat,visible_mat)
-real_to_emu(robot,"R1",mat)
-
-robot.reveal_2x3(mat, visible_mat)
-real_to_emu(robot, "R1", mat)
-
-robot.reveal_2x3(mat, visible_mat)
-real_to_emu(robot, "R1", mat)
-
-robot.show_map(visible_mat,0)
-time.sleep(0.05)
-while 1 :
-    mat = full_scan(visible_mat,robot)
-    if mat:
-        break
-
-print(mat[0])
+mat = full_scan(visible_mat, robot)
+mat = some_logic_fixes(mat, robot)
+path = create_path(mat,0)
+clear()
+print(path)
 
 
 
-# scan_iteration(interest_calculation(field_mat,coefficient_mat),field_mat,(3,5),1)
-# ini_for_nerds(replace_ints_in_matrix(field_mat))
-# print(coefficient_mat1)
-# robot_position = [4, 3]
-# robot_orientation = 1
-# em.reveal_2x3(robot_position, robot_orientation, field_mat, visible_mat)
-# print(visible_mat)
-# # print(weight_mat)
-# em.show_map(visible_mat, robot_position, robot_orientation)
-# em.turn_robot(1)
-# em.reveal_2x3(robot_position, robot_orientation, field_mat, visible_mat)
-# em.show_map(visible_mat, robot_position, robot_orientation)
+
+
