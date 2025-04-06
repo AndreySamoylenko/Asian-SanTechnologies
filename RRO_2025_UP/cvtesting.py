@@ -69,12 +69,10 @@ while 1:
         fps_t = time.time()
         edges = mc.analyse_edges(frame)
         messages, flags = mc.scan_frame(frame, prev_matrix, telemetry=1)
-        # key = keys_[flags[0][1]]
-        # dot = interest_zones[key]
-        # print(mc.tube_crutch(mc.from_cords_to_slice(frame, dot[0][1])))
 
 
-    # drawTelemetry(frame, messages, flags)
+
+    drawTelemetry(frame, messages, flags)
 
     cv2.rectangle(frame, (0, 0), (150, 30), (0, 0, 0), -1)
     robot.text_to_frame(frame, f"FPS: {fps}", 0, 20)

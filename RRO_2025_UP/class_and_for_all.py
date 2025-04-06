@@ -274,10 +274,16 @@ class MainComputer:
                 message = "ramp " + str(result - 30)
             elif wR * hR > 0:
                 # трубы красные
-                if wR < hR:  # vertical
-                    result = 52
-                else:  # horizontal
-                    result = 51
+                if crutch_flag == 2:
+                    if wR > 0.5 * frame_width:
+                        result = 51
+                    else:
+                        result = 52
+                else:
+                    if wR < hR:  # vertical
+                        result = 52
+                    else:  # horizontal
+                        result = 51
                 message = "tube " + str(result - 40)
             elif crutch_flag == 1 and self.tube_crutch(frame_):
                 result = 52
@@ -417,7 +423,7 @@ class MainComputer:
                         elevation_differences[stroke][tile] = 3 - (self.elevation + whites[stroke][tile])
                         visible[stroke][tile], messages[stroke][tile] = self.look_at_tile(
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]),
-                            whites[stroke][tile], (tile == 1) * stroke)
+                            whites[stroke][tile], (tile == 1) * (stroke+1))
 
         if telemetry:
             return messages, elevation_differences
