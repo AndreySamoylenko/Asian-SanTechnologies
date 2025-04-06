@@ -349,11 +349,8 @@ def real_to_emu(emulator, commands, field):
 
 def int_to_dir(int):
     if int == 1: return "U"
-
     elif int == 2: return "R"
-
     elif int == 3: return "D"
-
     else: return "L"
 
 pos = robot_pos_finder(replace_ints_in_matrix(field_mat))

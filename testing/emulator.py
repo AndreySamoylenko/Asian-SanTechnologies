@@ -156,27 +156,54 @@ class Emulator:
         return mat_res
 
     def from_15x15_to_15x8(self, m15x15, distance_to_edge):
-        tile_under_robot = int(m15x15[self.robot_position[1]][self.robot_position[0]])
-        m15x15[self.robot_position[1]][self.robot_position[0]] = 70
+        """
+        inputs:
+        матрица с полем 15 на 15
+        расстояние от робота до края
 
-        if self.robot_orientation != 1:
-            m15x15 = self.rotate_matrix(m15x15, 5 - self.robot_orientation)
+        outputs:
+        матрица 8х15 с полем
+
+        вообще эта функция берет имеющееся поле
+        разворачивает его так, чтобы найденный край был сверху
+        и записывает в новую матрицу 8 строк находящихся ниже найденного края.
+
+        после чего переписывает позицию и направление робота
+        """
+
+        tile_under_robot = int(m15x15[self.robot_position[1]][self.robot_position[0]]) # запомнили на какой клетке стояли (её код)
+        m15x15[self.robot_position[1]][self.robot_position[0]] = 70
+        # заменили её на 70 (код робота)((чтобы потом по этому коду её найти и заменить обратно))
+
+        if self.robot_orientation != 1:      # если матрица повернута не так как нам нужно
+            m15x15 = self.rotate_matrix(m15x15, 5 - self.robot_orientation) # поворачиваем
             self.robot_orientation = 1
 
         new_pos = []
+        # ищем заранее оставленный код робота в повернутой матрице (хотя если на россию пройдем то я буду юзать матрицу поворота)
         for i in range(15):
             for j in range(15):
                 if m15x15[i][j] == 70:
-                    new_pos = [i, j]
+                    new_pos = [i, j]   # и собственно записываем ее
                     break
 
         m15x8 = m15x15[new_pos[0] - distance_to_edge:(new_pos[0] - distance_to_edge) + 8, 0:15]
+        # забираем из старой матрицы 8 строк ниже края и пишем их как новую матрицу
         m15x8[distance_to_edge][new_pos[1]] = tile_under_robot
+        # возвращаем клетку под роботом на место
         self.robot_position = [new_pos[1], distance_to_edge]
+        # перезаписываем позицию
         return m15x8
+        # возвращаем новую матрицу
 
     def from_15x8_to_8x8(self, m15x8, distance_to_edge):
-        if self.robot_orientation % 2 == 0:
+        """
+        тут всё проще чем в предыдущей функции
+        мы уже знаем с каких сторон край ожидается
+        и обрабатываем как раз эти два случая
+        """
+        if self.robot_orientation % 2 == 0: # проверим верное ли направление
+            # (1 и 3 быть не может потому что, тогда мы найдем тот край в котором уже были)
             if self.robot_orientation == 2:
                 m8x8 = m15x8[0:8, self.robot_position[0] + distance_to_edge - 7:self.robot_position[0] + distance_to_edge + 1]
                 return m8x8

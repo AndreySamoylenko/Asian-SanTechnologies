@@ -27,7 +27,8 @@ def digitalRead():
 
 
 # -------------------------HSV----------------------------------
-
+# здесь лежат наборы границ цветов в цветовом пространстве HSV
+# они нужны для использования в функции cv2.inRange()
 downRed = np.array([0, 90, 0])
 upRed = np.array([10, 255, 255])
 downRed1 = np.array([170, 90, 0])
@@ -145,6 +146,7 @@ class MainComputer:
 
     @staticmethod
     def from_cords_to_slice(frame_, massive2x2):
+        # небольшая функция для уменьшения записи
         return frame_[massive2x2[0][1]:massive2x2[1][1], massive2x2[0][0]:massive2x2[1][0]]
 
     @staticmethod
@@ -184,7 +186,20 @@ class MainComputer:
         return x, y, w, h
 
     def tube_crutch(self, frame_):
-        # frame_ = cv2.blur(frame_, [, 5])
+        # мой любимый костыль для труб
+        """
+        красные трубы если находятся в положении 2 относительно робота
+        (то есть робот не может их забрать с этой позиции, но если трубу повернуть то сможет)
+        в центральной клетке ближней к роботу то на кадре в не видно красной подставки
+        поэтому мы придумали такой выход из положения
+
+        мы берем четыре отрезка на нашей зоне интереса и смотрим попарную разницу яркости пикселей на них
+        смотрим разницу между максимумом и минимумом горизонтальных отрезков
+        и её же для вертикальных отрезков
+
+        и если эти две разницы в пропорции далеки от единицы то значит там есть труба
+        """
+
         gray = cv2.cvtColor(frame_, cv2.COLOR_BGR2GRAY)
         gray = gray.astype(np.int16)
         frame_height, frame_width = gray.shape[:2]
@@ -207,12 +222,13 @@ class MainComputer:
 
     def look_at_tile(self, frame_, white_flag, crutch_flag=0):
         message = "none"
+        result = 0
+
         frame_height, frame_width = frame_.shape[:2]
         min_area = frame_height * frame_width * 0.04
         frame_b = cv2.blur(frame_, [11, 11])
 
         ImageHSV = cv2.cvtColor(frame_b, cv2.COLOR_BGR2HSV)
-        result = 0
         if white_flag:  # если клетка белая
             xR, yR, wR, hR = self.search_for_color(ImageHSV, downRed, upRed, min_area)
             xG, yG, wG, hG = self.search_for_color(ImageHSV, downGreen, upGreen, min_area)
