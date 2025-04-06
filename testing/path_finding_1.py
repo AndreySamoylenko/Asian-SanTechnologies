@@ -11,7 +11,7 @@ mat = rand_pat_from_file()
 mat = string_to_list(mat)
 field_mat = np.array(mat)
 
-visible_mat = np.array([[0] * 8] * 8)
+visible_mat = np.array([[0] * 15] * 15)
 
 weight_mat = np.array([[0] * 8] * 8)
 coefficient_mat = np.array([[0, 1, 1, 1, 0],
@@ -85,15 +85,20 @@ def interest_calculation(field_mat, coef_mat):
 
     return result
 
-def ramp_pair_finder(mat):
+def ramp_pair_finder(mat,robot):
     possible_pairs = []
-    # print(mat)
+    pos = robot.robot_position
+    waves = wave_ini((pos[1], pos[0]), neighbour_ini(replace_ints_in_matrix(mat)))
+    waves_all = []
+
+    for i in waves:
+        waves_all += i
 
     for i in range(len(mat)-1):
         for j in range(len(mat)-1):
-            if mat[i][j] + mat[i+1][j] == 64 and (mat[i][j]!= 0 and mat[i][j] != 64):
+            if mat[i][j] + mat[i+1][j] == 64 and (mat[i][j]!= 0 and mat[i][j] != 64) and (i+1,j) in waves_all:
                 possible_pairs.append([(i,j), (i+1,j)])
-            elif mat[i][j] + mat[i][j+1] == 66:
+            elif mat[i][j] + mat[i][j+1] == 66 and (i,j+1) in waves_all:
                 possible_pairs.append([(i,j), (i,j+1)])
 
     for i in possible_pairs:
@@ -130,7 +135,7 @@ def borders_with_tube(mat, coord):
         ny = y + dy
         nx = x + dx
         if 0 <= ny < rows and 0 <= nx < cols:
-            if str(mat[ny][nx])[0] == "5" or str(mat[ny][nx])[0] == "4" or str(mat[ny][nx])[0] == "6":
+            if str(mat[ny][nx])[0] == "5" or str(mat[ny][nx])[0] == "4" or str(mat[ny][nx])[0] == "6" or str(mat[ny][nx])[0] == "3" or str(mat[ny][nx])[0] == "2":
                 return True
     return False
 
@@ -168,7 +173,7 @@ def scan_iteration(field_mat, pos, dir, obj):
                 print_colored("our last chance", "red")
                 # print(field_mat)
                 # print("\n\n", tubes, to_unload)
-                to_go = ramp_pair_finder(field_mat)
+                to_go = ramp_pair_finder(field_mat,robot)
                 # cv2.waitKey()
 
                 con_dict = neighbour_ini(replace_ints_in_matrix(field_mat))
@@ -231,7 +236,7 @@ def scan_iteration(field_mat, pos, dir, obj):
                 print("No more points to try")
                 return None
 
-def full_scan(mat,robot):
+def full_scan(mat,robot, enable_visual):
     obj = cv2.imread("white_picture.jpg")
     way_to_scan = []
     # visible_mat[pos[0], pos[1]] = [10 if real_robot.check_floor() == 1 else 20]
@@ -270,6 +275,7 @@ def some_logic_fixes(mat,robot):
                 break
 
         way = wave_back_way(waves, (pos[1],pos[0]), closest_1st_f, neighbour_ini(replace_ints_in_matrix(mat)), 0 ,obj,replace_ints_in_matrix(mat),0)
+        ini(obj, replace_ints_in_matrix(mat))
         way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
         way = way_to_commands_single(way[0],mat,int_to_dir(robot.robot_orientation))
         real_to_emu(robot,way[0],mat)
@@ -290,6 +296,7 @@ def some_logic_fixes(mat,robot):
 
         way = wave_back_way(waves, (pos[1], pos[0]), closest_no_t, neighbour_ini(replace_ints_in_matrix(mat)),
                             0, obj, replace_ints_in_matrix(mat), 0)
+        ini(obj,replace_ints_in_matrix(mat))
         way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
         way = way_to_commands_single(way[0], replace_ints_in_matrix(mat), int_to_dir(robot.robot_orientation))
         real_to_emu(robot, way[0], mat)
@@ -353,7 +360,7 @@ pos = robot_pos_finder(replace_ints_in_matrix(field_mat))
 robot = Emulator()
 robot.robot_position = [pos[1],pos[0]]
 
-mat = full_scan(visible_mat, robot)
+mat = full_scan(visible_mat, robot, 1)
 mat = some_logic_fixes(mat, robot)
 path = create_path(mat,0)
 clear()
