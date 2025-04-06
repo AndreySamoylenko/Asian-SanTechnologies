@@ -58,8 +58,8 @@ interest_zones = {"higher": [[[[0, 190], [160, 360]], [[180, 170], [460, 350]], 
                   "same": [[[[20, 230], [180, 420]], [[200, 240], [440, 450]], [[460, 230], [620, 420]]],
                            [[[100, 125], [230, 220]], [[230, 120], [410, 220]], [[410, 125], [540, 220]]]],
 
-                  "lower": [[[[60, 270], [220, 450]], [[220, 270], [420, 480]], [[420, 270], [580, 450]]],
-                            [[[120, 165], [230, 270]], [[230, 155], [410, 270]], [[410, 165], [520, 270]]]]}
+                  "lower": [[[[60, 270], [200, 450]], [[220, 270], [420, 480]], [[440, 270], [580, 450]]],
+                            [[[120, 165], [210, 270]], [[230, 155], [410, 270]], [[430, 165], [520, 270]]]]}
 
 cords_for_white = {1: [[[[20, 210], [200, 400]], [[200, 210], [440, 430]], [[440, 210], [620, 400]]],
                        [[[100, 115], [215, 160]], [[0, 0], [0, 0]], [[440, 115], [550, 160]]]],
@@ -90,6 +90,7 @@ class MainComputer:
 
     elevation = 1
     cords_for_floor = [[290, 440], [640 - 290, 480]]
+
     @staticmethod
     def count_in_matrix(code, matrix):
         result = 0
@@ -183,30 +184,35 @@ class MainComputer:
         return x, y, w, h
 
     def tube_crutch(self, frame_):
+        # frame_ = cv2.blur(frame_, [, 5])
         gray = cv2.cvtColor(frame_, cv2.COLOR_BGR2GRAY)
-        frame_height, frame_width = frame_.shape[:2]
+        gray = gray.astype(np.int16)
+        frame_height, frame_width = gray.shape[:2]
         differences = [[], []]
-        for x in range(0.2 * frame_width, 0.2 * frame_width - 1):
-            differences[0].append(gray[0.7 * frame_height][x] - gray[0.7 * frame_height][x + 1])
+        const_x, const_y = int(0.8 * frame_width), int(0.8 * frame_height)
 
-        for y in range(0.2 * frame_height, 0.2 * frame_height - 1):
-            differences[1].append(gray[y][0.7 * frame_width] - gray[y + 1][0.7 * frame_width])
+        for pix in range(int(0.3 * frame_width), int(0.7 * frame_width)):
+            differences[0].append(gray[const_y][pix + 1] - gray[const_y][pix])
+            differences[0].append(gray[frame_height - const_y][pix + 1] - gray[frame_height - const_y][pix])
+
+        for pix in range(int(0.3 * frame_height), int(0.7 * frame_height)):
+            differences[1].append(gray[pix + 1][const_x] - gray[pix][const_x])
+            differences[1].append(gray[pix + 1][frame_width - const_x] - gray[pix][frame_width - const_x])
 
         diffs1 = max(differences[0]) - min(differences[0])
         diffs2 = max(differences[1]) - min(differences[1])
-
-        if abs((diffs1 / diffs2) - 1) > 0.4:
+        if abs(diffs1 / diffs2 - 1) > 0.5:
             return True
         return False
 
-    def look_at_tile(self, frame_, white_flag):
+    def look_at_tile(self, frame_, white_flag, crutch_flag=False):
         message = "none"
         frame_height, frame_width = frame_.shape[:2]
         min_area = frame_height * frame_width * 0.04
-        frame_ = cv2.blur(frame_, [11, 11])
+        frame_b = cv2.blur(frame_, [11, 11])
 
-        ImageHSV = cv2.cvtColor(frame_, cv2.COLOR_BGR2HSV)
-
+        ImageHSV = cv2.cvtColor(frame_b, cv2.COLOR_BGR2HSV)
+        result = 0
         if white_flag:  # если клетка белая
             xR, yR, wR, hR = self.search_for_color(ImageHSV, downRed, upRed, min_area)
             xG, yG, wG, hG = self.search_for_color(ImageHSV, downGreen, upGreen, min_area)
@@ -217,7 +223,7 @@ class MainComputer:
                     if (yG + hG / 2) > frame_height / 2:
                         result = 61
                     else:
-                        result = 63  # это вроде невозможный вариант (мы не можем такое увидеть)
+                        result = 63  # это вроде невозможный вариант (чтобы увидеть такое нужно быть вне поля)
                 else:
                     if (xG + wG / 2) > frame_width / 2:
                         result = 62
@@ -231,6 +237,10 @@ class MainComputer:
                 else:  # horizontal
                     result = 41
                 message = "tube " + str(result - 40)
+            elif crutch_flag:
+                if self.tube_crutch(frame_):
+                    result = 42
+                    message = "tube " + str(result - 40)
             else:
                 result = 10
                 message = 'lower X'
@@ -264,6 +274,10 @@ class MainComputer:
                 else:  # horizontal
                     result = 51
                 message = "tube " + str(result - 40)
+            elif crutch_flag:
+                if self.tube_crutch(frame_):
+                    result = 52
+                    message = "tube " + str(result - 40)
             else:
                 result = 20
                 message = 'upper X'
@@ -277,7 +291,7 @@ class MainComputer:
         return white_dots > black_dots
 
     def check_floor(self, frame):
-        if self.is_tile_white(self.from_cords_to_slice(frame, self.cords_for_floor),step=2):
+        if self.is_tile_white(self.from_cords_to_slice(frame, self.cords_for_floor), step=2):
             return 1
         return 2
 
@@ -365,7 +379,7 @@ class MainComputer:
                          [cords_of_tiles_on_map[0] + width, cords_of_tiles_on_map[1] + height]]
         return self.from_cords_to_slice(mat, overall_cords)
 
-    def scan_frame(self, frame, mat, telemetry = 0):
+    def scan_frame(self, frame, mat, telemetry=0):
         messages = [['a', 'b', 'c'], ['d', 'e', 'f']]
         elevation_differences = [[0, 0, 0], [0, 0, 0]]
 
@@ -375,8 +389,7 @@ class MainComputer:
         edges = self.analyse_edges(frame)
         strokes_to_scan = 2
         if sum(edges):
-            if edges.index(1) < 2:
-                strokes_to_scan = edges.index(1)
+            strokes_to_scan = edges.index(1)  # индекс первой единицы буквально и есть расстояние до края в клетках
 
         for stroke in range(strokes_to_scan):
             for tile in range(len(elevation_differences[0])):
@@ -393,17 +406,16 @@ class MainComputer:
                     if wb * hb > 0:
                         elevation_differences[stroke][tile] = 2 - self.elevation
                         visible[stroke][tile], messages[stroke][tile] = self.look_at_tile(
-                            self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]), 0)
+                            self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]), 0,
+                            (tile== 1))
 
                     else:
                         elevation_differences[stroke][tile] = 3 - (self.elevation + whites[stroke][tile])
                         visible[stroke][tile], messages[stroke][tile] = self.look_at_tile(
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]),
-                            whites[stroke][tile])
+                            whites[stroke][tile], (tile == 1))
 
         if telemetry:
             return messages, elevation_differences
 
         self.update_map(visible, mat)
-
-
