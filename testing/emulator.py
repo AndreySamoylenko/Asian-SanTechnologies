@@ -134,6 +134,60 @@ class Emulator:
         if result > 2: result = -1
         return result
 
+    @staticmethod
+    def rotate_matrix(mat_, turn_value):
+        mat1 = mat_
+        mat_res = []
+        for turn in range(turn_value):
+            mat_res = np.array(mat_)
+            for i in range(len(mat1)):
+                for j in range(len(mat1[0])):
+                    direction = mat1[j][i] % 10
+                    mat1[j][i] -= direction
+                    if direction:
+                        if 5 >= mat1[j][i] // 10 >= 4:
+                            direction = direction % 2 + 1
+                        else:
+                            direction = direction % 4 + 1
+
+                    mat_res[i, len(mat1[0]) - 1 - j] = mat1[j][i] + direction
+
+            mat1 = mat_res
+        return mat_res
+
+    def from_15x15_to_15x8(self, m15x15, distance_to_edge):
+        tile_under_robot = int(m15x15[self.robot_position[1]][self.robot_position[0]])
+        m15x15[self.robot_position[1]][self.robot_position[0]] = 70
+
+        if self.robot_orientation != 1:
+            m15x15 = self.rotate_matrix(m15x15, 5 - self.robot_orientation)
+            self.robot_orientation = 1
+
+        new_pos = []
+        for i in range(15):
+            for j in range(15):
+                if m15x15[i][j] == 70:
+                    new_pos = [i, j]
+                    break
+
+        m15x8 = m15x15[new_pos[0] - distance_to_edge:(new_pos[0] - distance_to_edge) + 8, 0:15]
+        m15x8[distance_to_edge][new_pos[1]] = tile_under_robot
+        self.robot_position = [new_pos[1], distance_to_edge]
+        return m15x8
+
+    def from_15x8_to_8x8(self, m15x8, distance_to_edge):
+        if self.robot_orientation % 2 == 0:
+            if self.robot_orientation == 2:
+                m8x8 = m15x8[0:8, self.robot_position[0] + distance_to_edge - 7:self.robot_position[0] + distance_to_edge + 1]
+                return m8x8
+            elif self.robot_orientation == 4:
+                m8x8 = m15x8[0:8, self.robot_position[0] - distance_to_edge:self.robot_position[0] - distance_to_edge + 8]
+                return m8x8
+            else:
+                print('oh no, wrong direction')
+        else:
+            print('opa, wrong direction')
+
     def display_symb(self, tile, underline=0):
         # ANSI-коды цвета
         BLACK = "\033[30m"  # Чёрный
