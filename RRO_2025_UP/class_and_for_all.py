@@ -205,7 +205,7 @@ class MainComputer:
             return True
         return False
 
-    def look_at_tile(self, frame_, white_flag, crutch_flag=False):
+    def look_at_tile(self, frame_, white_flag, crutch_flag=0):
         message = "none"
         frame_height, frame_width = frame_.shape[:2]
         min_area = frame_height * frame_width * 0.04
@@ -232,15 +232,20 @@ class MainComputer:
                 message = "stand " + str(result - 60)
             elif wR * hR > 0:
                 # трубы красные
-                if wR < hR:  # vertical
-                    result = 42
-                else:  # horizontal
-                    result = 41
+                if crutch_flag == 2:
+                    if wR > 0.5 * frame_width:
+                        result = 41
+                    else:
+                        result = 42
+                else:
+                    if wR < hR:  # vertical
+                        result = 42
+                    else:  # horizontal
+                        result = 41
                 message = "tube " + str(result - 40)
-            elif crutch_flag:
-                if self.tube_crutch(frame_):
-                    result = 42
-                    message = "tube " + str(result - 40)
+            elif crutch_flag and self.tube_crutch(frame_):
+                result = 42
+                message = "tube " + str(result - 40)
             else:
                 result = 10
                 message = 'lower X'
@@ -274,10 +279,9 @@ class MainComputer:
                 else:  # horizontal
                     result = 51
                 message = "tube " + str(result - 40)
-            elif crutch_flag:
-                if self.tube_crutch(frame_):
-                    result = 52
-                    message = "tube " + str(result - 40)
+            elif crutch_flag == 1 and self.tube_crutch(frame_):
+                result = 52
+                message = "tube " + str(result - 40)
             else:
                 result = 20
                 message = 'upper X'
@@ -407,13 +411,13 @@ class MainComputer:
                         elevation_differences[stroke][tile] = 2 - self.elevation
                         visible[stroke][tile], messages[stroke][tile] = self.look_at_tile(
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]), 0,
-                            (tile== 1))
+                            0)
 
                     else:
                         elevation_differences[stroke][tile] = 3 - (self.elevation + whites[stroke][tile])
                         visible[stroke][tile], messages[stroke][tile] = self.look_at_tile(
                             self.from_cords_to_slice(frame, interest_zones[keys_[elevation_differences[stroke][tile]]][stroke][tile]),
-                            whites[stroke][tile], (tile == 1))
+                            whites[stroke][tile], (tile == 1) * stroke)
 
         if telemetry:
             return messages, elevation_differences
