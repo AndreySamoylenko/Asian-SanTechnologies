@@ -1063,6 +1063,7 @@ def way_to_commands_single(path,mat,my_dir):
         if i == "su" or i == "sd": #проезд - рампа - проезд
             # res.append("X1")
             res.append("F1" if i == "su" else "F0")
+
             if i == "sd":
                 res.append("X1")
             continue
