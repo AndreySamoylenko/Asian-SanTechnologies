@@ -19,11 +19,12 @@ visible_mat = np.array([[0] * 8] * 8)
 
 
 class Emulator:
-    def __init__(self, position=None, direction=1):
+    def __init__(self, position=None, direction=1, floor=1):
         if position is None:
             position = [3, 3]
         self.robot_position = position
         self.robot_orientation = direction
+        self.floor = floor
 
     def reveal_2x3(self, field, visible):
         height, width = 2, 3  # Default for horizontal orientation (1 or 3)
@@ -106,6 +107,7 @@ class Emulator:
                     (old_tile == 30 + self.robot_orientation and new_tile == 20) or
                     (old_tile == 30 + ((self.robot_orientation - 1) + 2) % 4 + 1 and new_tile == 10)):
                 self.robot_position = new_pos
+                self.floor = new_tile // 10
             else:
                 print(f"Invalid ramp move: Cannot go from {old_tile} to {new_tile}")
                 exit()
@@ -115,6 +117,22 @@ class Emulator:
 
     def turn_robot(self, way):
         self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
+
+    def edge_check(self, mat):
+        mat = np.array(mat)
+        height, width = mat.shape[:2]
+        result = -1
+        if self.robot_orientation == 1:
+            result = self.robot_position[1]
+        elif self.robot_orientation == 2:
+            result = width - 1 - self.robot_position[0]
+        elif self.robot_orientation == 3:
+            result = height - 1 - self.robot_position[1]
+        elif self.robot_orientation == 4:
+            result = self.robot_position[0]
+
+        if result > 2: result = -1
+        return result
 
     def display_symb(self, tile, underline=0):
         # ANSI-коды цвета
