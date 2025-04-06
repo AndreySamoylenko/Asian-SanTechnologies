@@ -55,8 +55,9 @@ while 1:
     fps_count += 1
 
     if time.time() - t > 1:
-        # print(f"{edges}\n--")
-        # print(f"{flags}\n--")
+        print(f"{edges}\n--")
+        print(f"{flags}\n--")
+        print(f"{messages}\n--")
 
         fps = fps_count
         fps_count = 0
@@ -64,17 +65,25 @@ while 1:
 
     frame = robot.get_frame(wait_new_frame=1)
 
-    if time.time() - fps_t > 0.2:
+    if time.time() - fps_t > 0.3:
         fps_t = time.time()
         edges = mc.analyse_edges(frame)
         messages, flags = mc.scan_frame(frame, prev_matrix, telemetry=1)
+        # key = keys_[flags[0][1]]
+        # dot = interest_zones[key]
+        # print(mc.tube_crutch(mc.from_cords_to_slice(frame, dot[0][1])))
+
 
     # drawTelemetry(frame, messages, flags)
 
     cv2.rectangle(frame, (0, 0), (150, 30), (0, 0, 0), -1)
-    for dot in interest_zones['lower']:
-        cv2.rectangle(frame, dot[0][0], dot[0][1], (0, 0, 0), 1)
-        cv2.rectangle(frame, dot[1][0], dot[1][1], (0, 0, 0), 1)
-        cv2.rectangle(frame, dot[2][0], dot[2][1], (0, 0, 0), 1)
+    robot.text_to_frame(frame, f"FPS: {fps}", 0, 20)
+
+
+    for stroke in range(2):
+        for tile in range(3):
+            key = keys_[flags[stroke][tile]]
+            dot = interest_zones[key]
+            cv2.rectangle(frame, dot[stroke][tile][0],dot[stroke][tile][1], (90, 30, 100), 2)
 
     robot.set_frame(frame)
