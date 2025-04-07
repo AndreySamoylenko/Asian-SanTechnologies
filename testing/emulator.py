@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 
+from Future_engeneers_path_creation_new import *
 os.system("")
 
 field_mat = np.array([
@@ -25,6 +26,102 @@ class Emulator:
         self.robot_position = position
         self.robot_orientation = direction
         self.floor = floor
+
+    def get_3x2_rows(self, matrix):
+        #idktbh
+        """
+        Возвращает область 3x2 из матрицы в виде строк (рядов),
+        ориентированную по направлению
+
+        Параметры:
+            matrix: входная матрица (2D список/массив)
+            center_x, center_y: центральные координаты
+            direction: направление (1 - вверх, 2 - вправо, 3 - вниз, 4 - влево)
+
+        Возвращает:
+            Список списков - область 3x2, где каждый подсписок это строка (ряд)
+            Всегда возвращает 2 строки по 3 элемента
+        """
+        direction = self.robot_orientation
+        center_x = self.robot_position[0] + (robot_pos_finder(replace_ints_in_matrix(matrix))[1] - 8)
+        center_y = self.robot_position[1] + (robot_pos_finder(replace_ints_in_matrix(matrix))[0] - 8)
+        print(center_x, center_y)
+
+        rows = len(matrix)
+        if rows == 0:
+            return [[0] * 3, [0] * 3]  # Всегда возвращаем 2 строки по 3 элемента
+
+        cols = len(matrix[0])
+        result = []
+
+        # Определяем смещения для разных направлений
+        if direction == 1:  # Вверх
+            offsets = [(-2, -1), (-2, 0), (-2, 1), (-1, -1), (-1, 0), (-1, 1)]
+        elif direction == 2:  # Вправо
+            offsets = [(-1, 1), (0, 1), (1, 1), (-1, 2), (0, 2), (1, 2)]
+        elif direction == 3:  # Вниз
+            offsets = [(1, -1), (1, 0), (1, 1), (2, -1), (2, 0), (2, 1)]
+        elif direction == 4:  # Влево
+            offsets = [(-1, -2), (0, -2), (1, -2), (-1, -1), (0, -1), (1, -1)]
+        else:
+            raise ValueError("Направление должно быть от 1 до 4")
+
+        # Собираем данные с проверкой границ
+        values = []
+        for dy, dx in offsets:
+            y = center_y + dy
+            x = center_x + dx
+            if 0 <= y < rows and 0 <= x < cols:
+                values.append(matrix[y][x])
+            else:
+                values.append(0)
+
+        # Всегда возвращаем 2 строки по 3 элемента
+        return [values[:3], values[3:]]
+
+    def update_map(self, new_tiles, mat):
+        cords_of_tiles_on_map = [0, 0]
+
+        if self.robot_orientation == 1:
+            cords_of_tiles_on_map = [self.robot_position[0] - 2, self.robot_position[1] - 1]
+        elif self.robot_orientation == 2:
+            cords_of_tiles_on_map = [self.robot_position[0] - 1, self.robot_position[1] + 1]
+        elif self.robot_orientation == 3:
+            cords_of_tiles_on_map = [self.robot_position[0] + 1, self.robot_position[1] - 1]
+        elif self.robot_orientation == 4:
+            cords_of_tiles_on_map = [self.robot_position[0] - 1, self.robot_position[1] - 2]
+
+        height_of_new_tiles = 2
+        width_of_new_tiles = 3
+        if len(new_tiles) == 2 and len(new_tiles[0]) == 3:
+            for i in range(height_of_new_tiles):
+                for j in range(width_of_new_tiles):
+                    if 0 <= cords_of_tiles_on_map[0] + 2 < 15 and 0 <= cords_of_tiles_on_map[1] + 2 < 15:
+                        # поворот клетки перед записью в матрицу
+                        direction_of_map_object = new_tiles[i][j] % 10
+                        if direction_of_map_object:
+                            new_tiles[i][j] -= direction_of_map_object
+                            if 40 <= new_tiles[i][j] < 53:
+                                new_tiles[i][j] += direction_of_map_object % 2 + 1
+                            else:
+                                new_tiles[i][j] += (direction_of_map_object + self.robot_orientation - 1 - 1) % 4 + 1
+                        # поворот зоны вставки
+                        cords_insert = []
+                        if self.robot_orientation == 1:
+                            cords_insert = [cords_of_tiles_on_map[0] + i, cords_of_tiles_on_map[1] + j]
+                        elif self.robot_orientation == 2:
+                            cords_insert = [cords_of_tiles_on_map[0] + j, cords_of_tiles_on_map[1] + (1 - i)]
+                        elif self.robot_orientation == 3:
+                            cords_insert = [cords_of_tiles_on_map[0] + (1 - i), cords_of_tiles_on_map[1] + (2 - j)]
+                        elif self.robot_orientation == 4:
+                            cords_insert = [cords_of_tiles_on_map[0] + (2 - j), cords_of_tiles_on_map[1] + i]
+                        else:
+                            print("wrong direction")
+
+                        if mat[cords_insert[0]][cords_insert[1]] == 0:
+                            mat[cords_insert[0]][cords_insert[1]] = new_tiles[i][j]
+        else:
+            print("new_tiles wrong parameter")
 
     def reveal_2x3(self, field, visible):
         height, width = 2, 3  # Default for horizontal orientation (1 or 3)
@@ -118,21 +215,50 @@ class Emulator:
     def turn_robot(self, way):
         self.robot_orientation = (self.robot_orientation + way - 1) % 4 + 1
 
-    def edge_check(self, mat):
-        mat = np.array(mat)
-        height, width = mat.shape[:2]
-        result = -1
-        if self.robot_orientation == 1:
-            result = self.robot_position[1]
-        elif self.robot_orientation == 2:
-            result = width - 1 - self.robot_position[0]
-        elif self.robot_orientation == 3:
-            result = height - 1 - self.robot_position[1]
-        elif self.robot_orientation == 4:
-            result = self.robot_position[0]
+    def edge_check(self, matrix):
 
-        if result > 2: result = -1
-        return result
+        size = 8  # Размер матрицы 8x8
+
+        x = self.robot_position[0] + (robot_pos_finder(replace_ints_in_matrix(matrix))[1] - 8)
+        y = self.robot_position[1] + (robot_pos_finder(replace_ints_in_matrix(matrix))[0] - 8)
+
+        if self.robot_orientation == 1:  # Вверх (проверяем y)
+            distance = y
+        elif self.robot_orientation == 2:  # Вправо (проверяем x)
+            distance = (size - 1) - x
+        elif self.robot_orientation == 3:  # Вниз (проверяем y)
+            distance = (size - 1) - y
+        elif self.robot_orientation == 4:  # Влево (проверяем x)
+            distance = x
+        else:
+            raise ValueError("Некорректное направление. Допустимые значения: 1-4")
+
+        if distance == 1:
+            return 0
+        elif distance == 2:
+            return 1
+        else:
+            return -1
+
+    def from_15x15_to_15x8(self, m15x15, distance_to_edge):
+        tile_under_robot = int(m15x15[self.robot_position[1]][self.robot_position[0]])
+        m15x15[self.robot_position[1]][self.robot_position[0]] = 70
+
+        if self.robot_orientation != 1:
+            m15x15 = self.rotate_matrix(m15x15, 5 - self.robot_orientation)
+            self.robot_orientation = 1
+
+        new_pos = []
+        for i in range(15):
+            for j in range(15):
+                if m15x15[i][j] == 70:
+                    new_pos = [i, j]
+                    break
+
+        m15x8 = m15x15[new_pos[0] - distance_to_edge:(new_pos[0] - distance_to_edge) + 8, 0:15]
+        m15x8[distance_to_edge][new_pos[1]] = tile_under_robot
+        self.robot_position = [new_pos[1], distance_to_edge]
+        return m15x8
 
     @staticmethod
     def rotate_matrix(mat_, turn_value):

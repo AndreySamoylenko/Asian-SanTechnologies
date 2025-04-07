@@ -12,6 +12,7 @@ mat = string_to_list(mat)
 field_mat = np.array(mat)
 
 visible_mat = np.array([[0] * 15] * 15)
+# visible_mat[8][8] = 10
 
 weight_mat = np.array([[0] * 8] * 8)
 coefficient_mat = np.array([[0, 1, 1, 1, 0],
@@ -171,10 +172,7 @@ def scan_iteration(field_mat, pos, dir, obj):
 
             if tubes + tubes_1 + to_unload < 6:
                 print_colored("our last chance", "red")
-                # print(field_mat)
-                # print("\n\n", tubes, to_unload)
                 to_go = ramp_pair_finder(field_mat,robot)
-                # cv2.waitKey()
 
                 con_dict = neighbour_ini(replace_ints_in_matrix(field_mat))
                 waves = wave_ini((pos[1], pos[0]), con_dict)
@@ -186,10 +184,14 @@ def scan_iteration(field_mat, pos, dir, obj):
                 cv2.imshow("map", cv2.resize(obj, (600, 600)))
                 cv2.waitKey(1)
 
-                way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
-                way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(robot.robot_orientation))[0]
-                way += "X1"
-                return  way
+                if way:
+                    way_visualisation(obj, way[0], 0, 1, (0, 255, 0), 10, 0, replace_ints_in_matrix(field_mat))
+                    way = way_to_commands_single(way[0], replace_ints_in_matrix(field_mat), int_to_dir(robot.robot_orientation))[0]
+                    way += "X1"
+                    return  way
+
+                else:
+                    return "fail"
             else:
                 return "scanned"
 
@@ -236,23 +238,34 @@ def scan_iteration(field_mat, pos, dir, obj):
                 print("No more points to try")
                 return None
 
-def full_scan(mat,robot, enable_visual):
-    obj = cv2.imread("white_picture.jpg")
+def full_scan(mat,robot, enable_visual, obj):
+
     way_to_scan = []
     # visible_mat[pos[0], pos[1]] = [10 if real_robot.check_floor() == 1 else 20]
-    visible_mat[pos[0], pos[1]] = 10
+    visible_mat[8][8] = 10
 
     for i in range(1, 4):
-        robot.reveal_2x3(mat, visible_mat)
+        tiles = robot.get_3x2_rows(field_mat)
+        robot.update_map(tiles, visible_mat)
         real_to_emu(robot, "R1", mat)
+        ini(obj, replace_ints_in_matrix(mat))
+        cv2.waitKey(0)
+
 
     while  way_to_scan != "scanned":
+        if robot.edge_check(field_mat) > 0:
+            print_colored("guys we got em", "magenta")
+            robot.from_15x15_to_15x8(visible_mat,robot.edge_check(field_mat))
+            ini(obj, visible_mat)
+            cv2.waitKey(0)
 
         way_to_scan = scan_iteration(visible_mat, robot.robot_position, robot.robot_orientation, obj)
+        cv2.waitKey(0)
         real_to_emu(robot,way_to_scan,visible_mat)
 
         for i in range(1,4):
-            robot.reveal_2x3(mat, visible_mat)
+            tiles = robot.get_3x2_rows(field_mat)
+            robot.update_map(tiles, visible_mat)
             real_to_emu(robot, "R1", mat)
 
     return mat
@@ -353,17 +366,47 @@ def int_to_dir(int):
     elif int == 3: return "D"
     else: return "L"
 
-pos = robot_pos_finder(replace_ints_in_matrix(field_mat))
+obj = cv2.imread("white_picture.jpg")
+obj = cv2.resize(obj, (len(visible_mat) * 100, len(visible_mat[0]) * 100))
+
+# pos = robot_pos_finder(replace_ints_in_matrix(field_mat), False)
 robot = Emulator()
-robot.robot_position = [pos[1],pos[0]]
+robot.robot_position = [8,8]
 
-mat = full_scan(visible_mat, robot, 1)
-mat = some_logic_fixes(mat, robot)
-path = create_path(mat,0)
-clear()
-print(path)
+ini(obj, replace_ints_in_matrix(field_mat))
+cv2.waitKey(0)
+
+# tiles = robot.get_3x2_rows(field_mat)
+# robot.update_map(tiles, visible_mat)
 
 
+
+
+# print(robot.get_3x2_rows(field_mat))
+
+mat = full_scan(visible_mat, robot, 1, obj)
+# mat = some_logic_fixes(mat, robot)
+# path = create_path(mat,0)
+# clear()
+# print(path)
+# visible_mat[8][8] = 10
+# for i in range(0,4):
+#     tiles = robot.get_3x2_rows(field_mat)
+#     # print(tiles)
+#     robot.update_map(tiles,visible_mat)
+#     ini(obj, replace_ints_in_matrix(visible_mat))
+#     # print(visible_mat)
+#     cv2.waitKey(0)
+#     robot.turn_robot(-1)
+
+# ini(obj, replace_ints_in_matrix(visible_mat))
+# dict_test = neighbour_ini(replace_ints_in_matrix(visible_mat))
+# waves_test =  wave_ini((3,3), dict_test)
+# # print(waves_test)
+# way =  wave_back_way(waves_test, (3,3), (9,11), dict_test, 0 ,obj, visible_mat)
+# way_visualisation(obj, way[0], 0, 1, get_colors(1),10, 0, replace_ints_in_matrix(visible_mat))
+# cv2.line(obj,(100,100),(200,100), (0,255,0), 2)# cords = (8,8)
+# cv2.waitKey()
 
 
 

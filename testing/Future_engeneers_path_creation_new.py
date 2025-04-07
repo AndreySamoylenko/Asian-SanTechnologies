@@ -61,44 +61,39 @@ def ini(img, mat): #вывод объектов на экран
     if mat is not None:
         for i in range(len(mat)): # перебираем каждый элемент матрицы и выводим его
             for j in range(len(mat[i])):
-                show_smth(mat[i][j], (i, j), img)
+                show_smth(mat[i][j], (i, j), img, mat)
         cv2.imshow("map", cv2.resize(img, (600, 600)))
         cv2.waitKey(1)
     else:
         print("Field mat can't be non type object! \n   Programmer u are dummy ass")
 
-def show_smth(code, cords, object):
-    if code == 1041:
-        code = 1141
-
-    img_path = f"field_pics/{code}.png"
-
-    # Fast existence check and image loading
-    if os.path.exists(img_path):
-        pic = cv2.imread(img_path)
-        if pic is not None and pic.shape[0] == 100 and pic.shape[1] == 100:
-            # Direct assignment if all conditions are met
-            y_start, y_end = 100 * cords[0], 100 * cords[0] + 100
-            x_start, x_end = 100 * cords[1], 100 * cords[1] + 100
-            object[y_start:y_end, x_start:x_end] = pic
-            cv2.waitKey(1)
-            return
-
-    # Fallback path (only executed if above conditions fail)
-    pic = np.zeros((100, 100, 3), dtype=np.uint8)
-    pic[:] = (0, 0, 255)  # Red placeholder
-    y_start, y_end = 100 * cords[0], 100 * cords[0] + 100
-    x_start, x_end = 100 * cords[1], 100 * cords[1] + 100
-
-    # Boundary checks to prevent out-of-bounds errors
-    height, width = object.shape[:2]
-    y_start = max(0, min(y_start, height - 100))
+def show_smth(code, cords, object, mat = []):
+    # Precompute coordinates first (faster to do multiplication once)
+    y_start = 100 * cords[0]
+    x_start = 100 * cords[1]
     y_end = y_start + 100
-    x_start = max(0, min(x_start, width - 100))
     x_end = x_start + 100
 
-    object[y_start:y_end, x_start:x_end] = pic
-    cv2.waitKey(1)
+    # Code replacement (simplified condition)
+    code = 1141 if code == 1041 else code
+
+    # Try fast path first
+    try:
+        pic = cv2.imread(f"field_pics/{code}.png", cv2.IMREAD_UNCHANGED)
+        if pic is not None and pic.shape[0] == 100 and pic.shape[1] == 100:
+            # Direct assignment
+            object[y_start:y_end, x_start:x_end] = pic
+            return
+    except:
+        pass
+
+    # Fallback path with boundary checks
+    height, width = object.shape[:2]
+    y_start = max(0, min(y_start, height - 100))
+    x_start = max(0, min(x_start, width - 100))
+
+    # Create red placeholder (slightly faster than full array assignment)
+    object[y_start:y_start + 100, x_start:x_start + 100] = (0, 0, 255)
 
 def neighbour_ini(mat):          #определение клеток в которые можно пройти
     #если хочешь что-то менять - помни про инвертированные координаты, i это у, а j это х
@@ -112,7 +107,7 @@ def neighbour_ini(mat):          #определение клеток в кот�
             neighbour_dict[(i, j)] = [] #создание пустого списка клеток в которые можно пройти из конкретной клетки
             if mat[i][j] == 70: #если клетка из которой идем - первый этаж
 
-                if i + 1 < 8 and ((mat[i + 1][j] == 70) or (mat[i + 1][j] == 30)): #если при попытке пройти в + по у мы не выйдем за пределы поля и клетка в которую идем - элемент первого этажа или рампа направленная в нужную сторону то записываем ее в список
+                if i + 1 < len(mat) and ((mat[i + 1][j] == 70) or (mat[i + 1][j] == 30)): #если при попытке пройти в + по у мы не выйдем за пределы поля и клетка в которую идем - элемент первого этажа или рампа направленная в нужную сторону то записываем ее в список
                     # print("success")
                     neighbour_dict[(i, j)].append((i + 1, j)) #добавляем в список возможных клеток исходную с измененной координатой
 
@@ -124,7 +119,7 @@ def neighbour_ini(mat):          #определение клеток в кот�
                     # то же самое
                     neighbour_dict[(i, j)].append((i, j - 1))
 
-                if j + 1 < 8 and (mat[i][j + 1] == 70 or mat[i][j + 1] == 33):
+                if j + 1 < len(mat[i]) and (mat[i][j + 1] == 70 or mat[i][j + 1] == 33):
                     # то же самое
                     neighbour_dict[(i, j)].append((i, j + 1))
 
@@ -229,7 +224,7 @@ def interpolate_color(t):
         print("Fail during colour interpolation! arg can't be > 1 or < 0 !  \n arg:", t)
         return None
 
-def wave_frame_displaying(cords, w_num, max_w_num, object, toggle_ramk = 1, toggle_mycolor = None, custom_num = 0,line_smth = (3,0.8)):
+def wave_frame_displaying(cords, w_num, max_w_num, object, toggle_ramk = 1, toggle_mycolor = None, custom_num = 0,line_smth = (3,0.8), mat = []):
     #эта штука выводит один квадрат сетки волн + цифру
     add = 20
     if not toggle_mycolor:
@@ -289,6 +284,8 @@ def wave_visual(wave_list, object):
     for i in range(len(wave_list)): # перебираем все элементы списка с волнами, что бы визуализировать его на картинке
         for j in range(len(wave_list[i])):
             wave_frame_displaying(wave_list[i][j], i, len(wave_list) - 1, object)
+    cv2.imshow("map", cv2.resize(object, (600, 600)))
+
 
 def tuples_to_lists(tuples_list):
   return [list(tup) for tup in tuples_list] #thats dummy...
@@ -540,7 +537,7 @@ def clear():
     else:
         _ = system('clear')
 
-def robot_pos_finder(field_mat):
+def robot_pos_finder(field_mat, remove_robot = True):
     # ---------------pos detecting ------------------#
     print(field_mat)
 
@@ -552,7 +549,8 @@ def robot_pos_finder(field_mat):
 
                 if str(field_mat[i][j])[0] == "7":
                     my_pos = (i, j)
-                    field_mat[i][j] = 70
+                    if remove_robot:
+                        field_mat[i][j] = 70
                     print_colored(my_pos,"red")
 
                     return my_pos
