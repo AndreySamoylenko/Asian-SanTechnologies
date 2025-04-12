@@ -29,24 +29,38 @@ t = time.time()
 color = (255, 255, 255)  # белый цвет (B, G, R)
 map_frame = np.full((800, 800, 3), color, dtype=np.uint8)
 
-mat = [[52, 20, 20, 34, 10, 20, 10, 42],
-       [10, 10, 20, 20, 34, 20, 10, 62],
-       [32, 20, 20, 34, 20, 10, 10, 62],
-       [10, 10, 20, 20, 20, 34, 10, 62],
-       [10, 10, 32, 20, 20, 20, 34, 20],
-       [71, 10, 10, 10, 10, 10, 10, 20],
-       [10, 10, 42, 10, 20, 10, 10, 33],
-       [10, 10, 34, 32, 10, 20, 10, 10]]
+mat = [[10, 10, 10, 10, 10, 61, 61, 61],
+       [10, 10, 10, 10, 10, 10, 10, 10],
+       [10, 10, 10, 10, 10, 10, 10, 10],
+       [10, 10, 10, 10, 10, 10, 41, 10],
+       [10, 10, 10, 10, 10, 10, 42, 31],
+       [10, 10, 10, 10, 10, 10, 32, 20],
+       [10, 10, 10, 10, 10, 10, 71, 51],
+       [10, 10, 10, 10, 10, 10, 10, 20]]
 
-list_of_motions = create_path(mat, [0, 0, 0, 0, 0, 0, 1])
-list_of_motions = ['A0', 'a1', 'l1'] + list_of_motions + ['OO']
+floor = 1
+
+list_of_motions = create_path(mat, 0)
+
+# list_of_motions = [
+#     # 'X2', 'R1', 'X1', 'G0',
+#     # 'R2', 'X1', 'L1', 'X1', 'L1', 'F1', 'X2', 'F0',
+#     # 'X2', 'L1', 'X3', 'L1', 'X2', 'R1', 'X1', 'L1', 'X1', 'G0',
+#     # 'R2', 'X1', 'R1', 'X1', 'L1', 'X2', 'R1',
+#     'X1', 'R1', 'F1', 'F0', 'F1',
+#     'X2','OO', 'R1', 'X3', 'R1', 'X2', 'F0', 'F1', 'X1', 'G0',
+#     'R2', 'X1', 'F0', 'F1', 'X2', 'L1', 'X2', 'L1', 'X1', 'R1', 'X1', 'L1', 'X1',
+#     'F0', 'F1', 'F0', 'X1', 'R1', 'X1']
+
+# list_of_motions = ['X1', 'F1', 'F0', 'F1', 'OO', 'X2']
+
+list_of_motions = [f'a{floor}'] + list_of_motions + ['OO']
 
 counter = -1
 
 state = "button wait"
 timer_actions = 0
 
-floor = 0
 while 1:
     frame = robot.get_frame(wait_new_frame=1)
 
@@ -69,32 +83,22 @@ while 1:
 
     if state == "wait for action to end":
         if not digitalRead():
-            if list_of_motions[counter] != 'A0':
-                state = "string reading"
-            else:
-                state = "floor checking"
+            state = "string reading"
             counter += 1
             counter %= len(list_of_motions)
-
-    if state == "floor checking":
-        floor = mc.check_floor(frame)
-        mc.elevation = floor
-        list_of_motions[1] = f'a{floor}'
-        print(floor)
-        state = "string reading"
 
     fps_count += 1
     if time.time() > t + 1:
         fps = fps_count
         fps_count = 0
         t = time.time()
-    #
+
     if state == "button wait":
         drawMap(map_frame, mat)
         robot.set_frame(map_frame, 40)
     else:
         cv2.rectangle(frame, (0, 0), (320, 30), (0, 0, 0), -1)
         cv2.rectangle(frame, (530, 0), (640, 30), (0, 0, 0), -1)
-        robot.text_to_frame(frame, f"{state} {list_of_motions[counter]}", 20, 20)
+        robot.text_to_frame(frame, f"{state} {list_of_motions[counter]} {floor}", 20, 20)
         robot.text_to_frame(frame, f"FPS: {fps}", 530, 20)
         robot.set_frame(frame, 40)

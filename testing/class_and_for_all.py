@@ -44,8 +44,8 @@ upBlue = np.array([117, 255, 255])
 downGreen = np.array([58, 114, 0])
 upGreen = np.array([88, 255, 255])
 
-downWhite = np.array([0, 0, 130])
-upWhite = np.array([180, 70, 255])
+downWhite = np.array([0, 0, 125])
+upWhite = np.array([180, 75, 255])
 
 # -------------------------Cords for cv2----------------------------------
 
@@ -277,7 +277,11 @@ class MainComputer:
         return white_dots > black_dots
 
     def check_floor(self, frame):
-        if self.is_tile_white(self.from_cords_to_slice(frame, self.cords_for_floor),step=2):
+        border = 128
+        gray = cv2.cvtColor(self.from_cords_to_slice(frame, self.cords_for_floor), cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(gray, border, 255, cv2.THRESH_BINARY)
+        white_dots, black_dots = self.count_white(mask, 2)
+        if white_dots > black_dots:
             return 1
         return 2
 
