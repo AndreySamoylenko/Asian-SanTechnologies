@@ -10,7 +10,7 @@ mat = [[10, 10, 10, 10, 10, 61, 61, 61],
        [10, 10, 10, 10, 10, 10, 32, 20],
        [10, 10, 10, 10, 10, 10, 71, 51],
        [10, 10, 10, 10, 10, 10, 10, 20]]
-way = create_path(mat,0)
+way = create_path(mat,1)
 ini_for_nerds(replace_ints_in_matrix(mat))
 # print((0,0) == [0,0])
 # print(replace_ints_in_matrix(mat))
