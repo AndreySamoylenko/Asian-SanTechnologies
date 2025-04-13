@@ -4,10 +4,10 @@ import re
 import time  # что бы время считать
 from copy import deepcopy
 from os import system, name
-
+from copy import deepcopy
 import cv2  # что бы окошки выводить
 import numpy as np
-
+import itertools
 
 #
 # def icon_change():
@@ -696,7 +696,7 @@ def final_roadmap(obj, field_mat, ramp_checkment=False, skip_all_cv=False):
     # -------------------waves building--------------------#
 
     dictionary = neighbour_ini(field_mat)
-    p1_tmp = copy.deepcopy(my_pos)  # variable for my pos storing (can be replaced with way[0][-1] but I don't care
+    p1_tmp = my_pos[:]  # variable for my pos storing (can be replaced with way[0][-1] but I don't care
     waves = wave_ini(my_pos, dictionary)  # creating waves
 
     # print_colored(field_mat,"red")
