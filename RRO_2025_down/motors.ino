@@ -34,4 +34,13 @@ void drive(float spa, float spb, float spc, float spd) {
   // Serial.println(abs(spc));
 }
 
-
+void stop(){
+  digitalWrite(ma1,1);
+  digitalWrite(ma2,1);
+  digitalWrite(mb1,1);
+  digitalWrite(mb2,1);
+  digitalWrite(mc1,1);
+  digitalWrite(mc2,1);
+  digitalWrite(md1,1);
+  digitalWrite(md2,1);
+}

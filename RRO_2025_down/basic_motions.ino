@@ -1,51 +1,95 @@
 
 #define MIN_SPEED 80
+#define MIN_SPEED 80
 
-void FromNormalToInverse() {
-
-  pidEnc(3, 0, 1, 200, 200, 0);
-  MoveSync(200, 200, 500, 0);
-  inverse = 1;
-  pidEnc(3, 0, 1, 200, 1000, 1);
-}
-
-
-void turn(float sped, int side, int angle) {
-  delay(50);
-  drive(side * sped, -side * sped, -side * sped, side * sped);
-  MoveSync(side * sped, -side * sped, angle * 10.0 / 6.0, 1);
-}
-
-void turnL(int speed, int side_of_turn, int way_to_drive) {
+void floor_distinction() {
   AllDiagonal();
-  delay(100);
-  int dat1 = 0;
-
-  if (side_of_turn == 1)
-    dat1 = 1;
-  else
-    dat1 = 2;
-
-  if (way_to_drive == -1)
-    dat1 += 2;  // 2+2 -> 4    1+2 -> 3
-
-  while (sensors(dat1) < (inverse ? 255 - 160 : 160)) {
-    drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
-  }
-  while (sensors(dat1) > (inverse ? 255 - 60 : 60)) {
-    drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
-  }
-  while (sensors(dat1) < (inverse ? 255 - 120 : 120)) {
-    drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
-  }
-  drive(-side_of_turn * 255, -side_of_turn * 255, side_of_turn * 255, side_of_turn * 255);
-  delay(abs(speed) * 0.08);
-  drive(0, 0, 0, 0);
+  delay(300);
+  MoveSync(150, -150, 90, 1);
+  delay(200);
 }
 
-void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
-  // dist = (dist / 28.5) * 100;
-  drive(0, 0, 0, 0);
+void FromNormalToInverse(int way) {
+  if (abs(way) == 1) {
+    pidEnc(2, 0, 1, way * 200, 400, 0);
+    MoveSync(way * 255, way * 255, 50, 0);
+  }
+  inverse = 1;
+  pidEnc(1.5, 0.01, 0.2, way * 255, 2800 - (abs(way) == 1) * 400, 1);
+}
+
+void FromInverseToNormal(int way) {
+  int deg = 0;
+  if (abs(way) > 1) {
+    way /= 2;
+    deg = 1400;
+    beep(200, 200);
+    pidEnc(3, 0, 1, way * 240, 400, 0);
+  }
+
+  pidEnc(3, 0, 1, way * 110, 900, 0);
+  pidEnc(3, 0, 1, way * 80, 1650 - deg, 1);
+
+  inverse = 0;
+  // pidEnc(3, 0, 1, way * 80, 100, 1);
+}
+
+
+void turnL(int speed, int side_of_turn, int way_to_drive, int number) {
+  AllDiagonal();
+  delay(300);
+  for (int i = 0; i < number; i++) {
+    int dat1 = 0;
+    Serial.println("aaaaa");
+    if (side_of_turn == 1) {
+      if (way_to_drive == 1)
+        dat1 = 3;
+      else
+        dat1 = 1;
+    } else if (side_of_turn == -1) {
+      if (way_to_drive == 1)
+        dat1 = 2;
+      else
+        dat1 = 4;
+    }
+
+    if (inverse) {
+      drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
+      delay(50);
+
+      while (sensors(dat1) > 100)
+        drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
+
+      while (sensors(dat1) < 200)
+        drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
+
+      while (sensors(dat1) > 90)
+        drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
+    } else {
+      drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
+      delay(50);
+      while (sensors(dat1) < 160)
+        drive(side_of_turn * speed, side_of_turn * speed, -side_of_turn * speed, -side_of_turn * speed);
+
+      while (sensors(dat1) > 40)
+        drive(side_of_turn * speed * 0.8, side_of_turn * speed * 0.8, -side_of_turn * speed * 0.8, -side_of_turn * speed * 0.8);
+
+      while (sensors(dat1) < 240)
+        drive(side_of_turn * speed * 0.6, side_of_turn * speed * 0.6, -side_of_turn * speed * 0.6, -side_of_turn * speed * 0.6);
+    }
+
+    drive(-side_of_turn * 255, -side_of_turn * 255, side_of_turn * 255, side_of_turn * 255);
+    delay(map(abs(speed), 0, 255, 0, 25));
+    stop();
+    delay(60);
+  }
+  AllForward();
+  delay(300);
+}
+
+void MoveSync(float sped1, float sped2, uint32_t dist, int stopp) {
+  dist = (dist / 29) * 102;
+  // drive(0, 0, 0, 0);
 
   float e = 0;
   float eold = 0;
@@ -66,16 +110,16 @@ void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
         e = countl * abs(sped2) / abs(sped1) - countr;
       }
 
-      if ((dist > 50 and deg < 300 and deg < 0.7 * dist) and (millis() - timer) < 200) {
-        sped1 = MIN_SPEED + ((millis() - timer) / 200) * (sped1 - MIN_SPEED);
-        sped2 = MIN_SPEED + ((millis() - timer) / 200) * (sped2 - MIN_SPEED);
-      } else if (dist > 150 and (sped1 >= 150 and sped2 >= 150) and dist - deg < 90) {
-        sped1 = sped11 * 0.6;
-        sped2 = sped22 * 0.6;
-      } else {
-        sped1 = sped11;
-        sped2 = sped22;
-      }
+      // if ((dist > 50 and deg < 300 and deg < 0.7 * dist) and (millis() - timer) < 200) {
+      //   sped1 = MIN_SPEED + ((millis() - timer) / 200) * (sped1 - MIN_SPEED);
+      //   sped2 = MIN_SPEED + ((millis() - timer) / 200) * (sped2 - MIN_SPEED);
+      // } else if (dist > 150 and (sped1 >= 150 and sped2 >= 150) and dist - deg < 90) {
+      //   sped1 = sped11 * 0.6;
+      //   sped2 = sped22 * 0.6;
+      // } else {
+      sped1 = sped11;
+      sped2 = sped22;
+      // }
 
       float u = e * 4 + (e - eold) * 8;
       float mot1 = sped1 - u * sped1 / abs(sped1);
@@ -98,10 +142,10 @@ void MoveSync(float sped1, float sped2, uint32_t dist, int stop) {
       if (sped2 != 0) deg = countr;
     }
   }
-  if (stop > 0) {  //резко тормоз
+  if (stopp > 0) {  //резко тормоз
     drive(-255 * sped1 / abs(sped1), -255 * sped1 / abs(sped1), -255 * sped2 / abs(sped2), -255 * sped2 / abs(sped2));
-    delay(((abs(sped1) + abs(sped2)) / 2) / 255 * 10);
-    drive(0, 0, 0, 0);
+    delay(((abs(sped1) + abs(sped2)) / 2) / 255 * 30);
+    stop();
     delay(50);
   }
 }
@@ -116,8 +160,4 @@ void driveAngle(uint8_t sped, float angle) {
   spd = spb /* *k */;
 
   drive(spa, spb, spc, spd);
-}
-
-void stop() {
-  drive(0, 0, 0, 0);
 }

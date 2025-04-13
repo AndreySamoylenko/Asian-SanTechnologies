@@ -1,11 +1,11 @@
 float sensors(int dat) {
   float data = 0;
   switch (dat) {
-    case 2:
-      data = float(analogRead(sb) - datbmin) / (datbmax - datbmin);
-      break;
     case 1:
       data = float(analogRead(sa) - datamin) / (datamax - datamin);
+      break;
+    case 2:
+      data = float(analogRead(sb) - datbmin) / (datbmax - datbmin);
       break;
     case 3:
       data = float(analogRead(sc) - datcmin) / (datcmax - datcmin);
@@ -14,15 +14,22 @@ float sensors(int dat) {
       data = float(analogRead(sd) - datdmin) / (datdmax - datdmin);
       break;
   }
+
   return constrain(data * 256, 0, 256);
 }
 
+
+
+
 void beep(int freq, int dur) {
   myTone(1.0 / float(freq), dur);
-  delay(10);
 }
 
 void myTone(float per, int dur) {
+  // tone(BZ_PIN,per);
+  // delay(dur);
+  // noTone(BZ_PIN);
+
   uint32_t tim = millis();
   while (millis() < tim + dur) {
     digitalWrite(BZ_PIN, 1);
@@ -34,79 +41,73 @@ void myTone(float per, int dur) {
 
 // some cringe calibration
 
-void calibration() {
-  digitalWrite(13, 1);
-  while (digitalRead(BTN_PIN))
-    ;
-  delay(50);
-  digitalWrite(13, 0);
-
-  uint16_t suma, sumb;
-  suma = 0;
-  sumb = 0;
-  for (int i = 0; i < 10; i++) {
-    delay(10);
-    suma += analogRead(sb);
-    sumb += analogRead(sc);
-  }
-  suma = suma / 10;
-  sumb = sumb / 10;
-  datbmax = suma;
-  datcmax = sumb;
-
-  digitalWrite(13, 1);
-  while (digitalRead(BTN_PIN))
-    ;
-  delay(50);
-  digitalWrite(13, 0);
-
-  suma = 0;
-  sumb = 0;
-  for (int i = 0; i < 10; i++) {
-    delay(10);
-    suma += analogRead(sa);
-    sumb += analogRead(sd);
-  }
-  suma = suma / 10;
-  sumb = sumb / 10;
-  datamax = suma;
-  datdmax = sumb;
 
 
+#define D4 293
+#define D5 587
+#define A4 440
+#define GH4 415
+#define G4 391
+#define F4 350
+#define C4 261
+#define C5 523
 
-  digitalWrite(13, 1);
-  while (digitalRead(BTN_PIN))
-    ;
-  delay(50);
-  digitalWrite(13, 0);
 
-  suma = 0;
-  sumb = 0;
-  for (int i = 0; i < 10; i++) {
-    delay(10);
-    suma += analogRead(sb);
-    sumb += analogRead(sc);
-  }
-  suma = suma / 10;
-  sumb = sumb / 10;
-  datbmin = suma;
-  datcmin = sumb;
+void do_megalovania() {
 
-  digitalWrite(13, 1);
-  while (digitalRead(BTN_PIN))
-    ;
-  delay(50);
-  digitalWrite(13, 0);
+  delay(150);
+  beep(D4, 75);
+  delay(75);
 
-  suma = 0;
-  sumb = 0;
-  for (int i = 0; i < 10; i++) {
-    delay(10);
-    suma += analogRead(sa);
-    sumb += analogRead(sd);
-  }
-  suma = suma / 10;
-  sumb = sumb / 10;
-  datamin = suma;
-  datdmin = sumb;
+  beep(D4, 75);
+  delay(75);
+
+  beep(D5, 75);
+  delay(75 + 125);
+
+
+  beep(A4, 75);
+  delay(75 + 250);
+
+  beep(GH4, 75);
+  delay(75 + 125);
+
+
+  beep(G4, 75);
+  delay(75 + 125);
+
+  beep(F4, 125);
+  delay(125);
+
+  beep(D4, 75);
+  delay(75);
+
+  beep(F4, 75);
+  delay(75);
+
+  beep(G4, 75);
+  delay(75);
+
+  // beep(C4,75);
+  // delay(75);
+
+  // beep(C4,75);
+  // delay(75);
+
+  // beep(D5,75);
+  // delay(75+125);
+
+  // beep(A4,75);
+  // delay(75+250);
+
+
+  // beep(GH4,75);
+  // delay(75+125);
+
+
+  // beep(G4,75);
+  // delay(75+125);
+
+  // beep(F4,125);
+  // delay(125);
 }
