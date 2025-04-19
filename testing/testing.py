@@ -1,55 +1,112 @@
 import cv2
-import copy
-from Future_engeneers_path_creation_new import create_path, ini_for_nerds, replace_ints_in_matrix
-
-mat = [[10, 10, 20, 32, 20, 20, 1041, 34],
-       [10, 42, 10, 20, 20, 34, 10, 62],
-       [10, 20, 20, 20, 34, 10, 10, 62],
-       [33, 10, 10, 10, 20, 10, 10, 62],
-       [20, 10, 20, 10, 20, 10, 10, 71],
-       [20, 10, 20, 10, 10, 10, 20, 10],
-       [31, 10, 33, 10, 41, 10, 20, 33],
-       [10, 10, 10, 20, 20, 20, 34, 31]]
-way = create_path(mat,1)
-print(way)
-ini_for_nerds(replace_ints_in_matrix(mat))
-# print((0,0) == [0,0])
-# print(replace_ints_in_matrix(mat))
-
-# cv2.waitKey(0)
-#
-# fix case when start point = finish point (can be brain damaging task)
-# add unload path building (rn it only gets to the closest unload point) (if closest unload point = point to pick up tube it wont work properly because of previous problem)
-# make code a little bit more readable (rn it really messy)
-
-# (important) - add to final str unload variant (1!!!!1!!!1!!)
+import numpy as np
+import tkinter as tk
+from tkinter import ttk
+from PIL import Image, ImageTk
 
 
-# def border_find(interest,mat,pos,dir):
-#     revealed = np.array([[0 if cell == 0 else 1 for cell in row] for row in field_mat])
-#     cords = {}
+class DistortionCorrector:
+    def __init__(self, root, image_path):
+        self.root = root
+        self.root.title("Коррекция дисторсии")
 
-#     for i in range(len(field_mat)):
-#         for j in range(len(field_mat)):
-#             cords[(i,j)] = revealed[i][j]*interest[i][j]
-#     way = []
-#     while not way:
-#         to_go = max(cords.values())
-#         for key, val in cords.items():
-#             if val == to_go:
-#                 to_go = key
-#                 break
-#         con_dict = neighbour_ini(replace_ints_in_matrix(mat))
-#         waves = wave_ini(pos,con_dict)
-#         way = wave_back_way(waves,pos,to_go,con_dict,0,None,mat)
-#         if way:
-#             way = way_to_commands([way,0],field_mat)
-#             print("way")
-#         else:
-#             del cords[to_go]
-#
-#
-# border_find(interest_calculation(field_mat,coefficient_mat),field_mat,(3,5),1)
+        # Загрузка изображения
+        self.original_image = cv2.imread(image_path)
+        if self.original_image is None:
+            raise ValueError("Не удалось загрузить изображение!")
+
+        # Параметры камеры (примерные)
+        self.height, self.width = self.original_image.shape[:2]
+        self.camera_matrix = np.array([
+            [1000, 0, self.width / 2],
+            [0, 1000, self.height / 2],
+            [0, 0, 1]
+        ], dtype=np.float32)
+
+        # Инициализация коэффициентов
+        self.dist_coeffs = np.array([-0.1, 0.01, 0.001, 0.001, 0], dtype=np.float32)
+
+        # Создание интерфейса
+        self.create_widgets()
+        self.update_image()
+
+    def create_widgets(self):
+        # Canvas для отображения изображения
+        self.canvas = tk.Canvas(self.root, width=self.width, height=self.height)
+        self.canvas.pack(side=tk.LEFT)
+
+        # Фрейм для ползунков
+        control_frame = tk.Frame(self.root)
+        control_frame.pack(side=tk.RIGHT, padx=10, pady=10)
+
+        # Создание ползунков для каждого коэффициента
+        self.sliders = []
+        params = [
+            ("k1 (Радиальное)", -1.0, 1.0, self.dist_coeffs[0]),
+            ("k2 (Радиальное)", -0.5, 0.5, self.dist_coeffs[1]),
+            ("p1 (Тангенц.)", -0.01, 0.01, self.dist_coeffs[2]),
+            ("p2 (Тангенц.)", -0.01, 0.01, self.dist_coeffs[3]),
+            ("k3 (Радиальное)", -0.5, 0.5, self.dist_coeffs[4])
+        ]
+
+        for i, (text, min_val, max_val, init_val) in enumerate(params):
+            label = tk.Label(control_frame, text=text)
+            label.grid(row=i, column=0, sticky="w")
+
+            slider = ttk.Scale(
+                control_frame,
+                from_=min_val,
+                to=max_val,
+                value=init_val,
+                command=lambda val, idx=i: self.on_slider_change(val, idx),
+                length=200
+            )
+            slider.grid(row=i, column=1)
+            self.sliders.append(slider)
+
+            # Отображение текущего значения
+            value_label = tk.Label(control_frame, text=f"{init_val:.4f}")
+            value_label.grid(row=i, column=2)
+            self.sliders.append(value_label)  # Сохраняем ссылку на label
+
+    def on_slider_change(self, val, idx):
+        # Обновляем коэффициент
+        self.dist_coeffs[idx] = float(val)
+
+        # Обновляем отображение значения
+        self.sliders[idx * 2 + 1].config(text=f"{float(val):.4f}")
+
+        # Обновляем изображение
+        self.update_image()
+
+    def update_image(self):
+        # Коррекция искажения
+        undistorted = cv2.undistort(
+            self.original_image,
+            self.camera_matrix,
+            self.dist_coeffs
+        )
+
+        # Конвертация для tkinter
+        image_rgb = cv2.cvtColor(undistorted, cv2.COLOR_BGR2RGB)
+        pil_image = Image.fromarray(image_rgb)
+        tk_image = ImageTk.PhotoImage(pil_image)
+
+        # Обновление изображения на canvas
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=tk_image)
+        self.canvas.image = tk_image  # Сохраняем ссылку
+
+
+# Запуск приложени
+root = tk.Tk()
+try:
+    app = DistortionCorrector(root, "pole.jpg")
+    root.mainloop()
+except Exception as e:
+    print(f"Ошибка: {e}")
+    root.destroy()
+
+
 def get_3x2_area_safe(matrix, center_x, center_y, direction):
     """
     Возвращает область 3x2 из матрицы, заменяя отсутствующие клетки на 0

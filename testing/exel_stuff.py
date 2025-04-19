@@ -1,4 +1,4 @@
-from openpyxl import load_workbook, Workbook
+# from openpyxl import load_workbook, Workbook
 import openpyxl
 import random
 import ast
@@ -6,16 +6,16 @@ import ast
 max_str_num = 150
 #check pats_all exel file if interested
 
-def rand_pat_from_file():
-    global max_str_num
-    workbook = load_workbook("pats_all.xlsx")
-    sheet = workbook["pats_all"]
-    pat = []
-    while not pat:
-        r = random.randint(2,max_str_num)
-        pat = sheet.cell(row = r, column= 1).value
-    # print(pat)
-    return(pat)
+# def rand_pat_from_file():
+#     global max_str_num
+#     workbook = load_workbook("pats_all.xlsx")
+#     sheet = workbook["pats_all"]
+#     pat = []
+#     while not pat:
+#         r = random.randint(2,max_str_num)
+#         pat = sheet.cell(row = r, column= 1).value
+#     # print(pat)
+#     return(pat)
 
 def replace_ints_in_matrix_rev(matrix):
     replacements = {
