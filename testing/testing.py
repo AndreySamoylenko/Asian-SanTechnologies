@@ -7,37 +7,29 @@
 import cv2
 
 from Future_engeneers_path_creation_new import *
-mat = [[10, 10, 10],
-       [20, 52, 10],
-       [31, 41, 10],
-       [33, 71, 10],
-       [20, 34, 10],
-       [10, 10, 10],
-       [10, 10, 10],
-       [63, 63, 63]]
-
-# mat = replace_ints_in_matrix(mat)
-# pos = robot_pos_finder(mat)
-# d = neighbour_ini(mat)
-# print(pos)
-# waves = wave_ini((pos[0],pos[1]),d)
-# obj = cv2.imread("white_picture.jpg")
+mat = [[10, 71, 20, 10, 20, 20, 34, 10], [42, 10, 10, 32, 20, 20, 34, 10], [10, 10, 10, 10, 10, 31, 10, 10], [10, 20, 10, 10, 20, 20, 10, 41], [10, 10, 20, 10, 20, 20, 10, 62], [10, 20, 20, 10, 20, 20, 10, 62], [20, 20, 20, 34, 33, 33, 10, 62], [10, 34, 32, 1041, 20, 34, 10, 10]]# mat = replace_ints_in_matrix(mat)
+# # pos = robot_pos_finder(mat)
+# # # d = neighbour_ini(mat)
+# # # print(pos)
+# # # waves = wave_ini((pos[0],pos[1]),d)
+# # # print(wave_back_way(waves, (3,1),(3,1),d,0,obj,mat))
+# # #
 # ini(obj,mat)
-# wave_visual(waves,obj)
-#
-# waves_a = []
-# for i in waves:
-#     for j in i:
-#         waves_a.append(j)
-#
-# print(pick_up_points_find(mat,waves_a))
+# # # wave_visual(waves,obj)
+# # #
+# # # waves_a = []
+# # # for i in waves:
+# # #     for j in i:
+# # #         waves_a.append(j)
+# # #
+# # # print(pick_up_points_find(mat,waves_a))
 # cv2.waitKey(0)
 
 
 
 
 
-create_path(mat,1)
+print(create_path(mat,1))
 
 #
 # class DistortionCorrector:

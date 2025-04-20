@@ -307,7 +307,7 @@ def wave_back_way(waves, p1, p2, dict, lenght_debugging,object,field_mat, max_le
     if p1 == p2:
         if lenght_debugging:
             print("Start and finish points can't be same! \n Points:", p1, p2)
-        return [p1,0]
+        return [[p1],0]
 
     if p1 != waves[0][0]:
         if lenght_debugging:
@@ -576,10 +576,10 @@ def pick_up_points_find(field_mat, waves_all):
                 tubes.append((i, j))
 
                 if list(str(field_mat[i][j]))[-1] == "1":  # смотрим куда повернута труба
-                    print((i,j),1)
-                    print(waves_all)
+                    # print((i,j),1)
+                    # print(waves_all)
 
-                    if j < len(field_mat[0]) and str(field_mat[i][j])[0] == str(field_mat[i][j + 1])[0] and (i, j + 1) in waves_all:
+                    if j + 1 < len(field_mat[0]) and str(field_mat[i][j])[0] == str(field_mat[i][j + 1])[0] and (i, j + 1) in waves_all:
                         cell_to_tube.append((i, j + 1))
 
                     if j - 1 > -1 and str(field_mat[i][j])[0] == str(field_mat[i][j - 1])[0] and (i, j - 1) in waves_all:  # если на том же этаже и есть в волнах, то считаем что с этой клетки можно забрать
@@ -589,7 +589,7 @@ def pick_up_points_find(field_mat, waves_all):
                     if j - 1 > -1 and str(field_mat[i][j - 1]) == "33" and (i, j - 1) in waves_all: #все равно на россию переписывать...(
                         cell_to_tube.append((i, j - 1))
 
-                    if j + 1 <= len(field_mat[0]) and str(field_mat[i][j + 1]) == "32" and (i, j + 1) in waves_all:
+                    if j + 1 < len(field_mat[0]) and str(field_mat[i][j + 1]) == "32" and (i, j + 1) in waves_all:
                         cell_to_tube.append((i, j + 1))
 
 
@@ -606,7 +606,7 @@ def pick_up_points_find(field_mat, waves_all):
                         cell_to_tube.append((i + 1, j))
 
                     # ---------------picking up from ramps-----------------#
-                    if i + 1 <= len(field_mat) and str(field_mat[i + 1][j]) == "30" and (i + 1, j) in waves_all:
+                    if i + 1 < len(field_mat) and str(field_mat[i + 1][j]) == "30" and (i + 1, j) in waves_all:
                         cell_to_tube.append((i + 1, j))
 
                     if i - 1 > -1 and str(field_mat[i - 1][j]) == "31" and (i - 1, j) in waves_all:
@@ -729,6 +729,7 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
 
                 #16.11.24 в 20:25 я пофиксил тупейший баг, но об этом никто не узнает
 
+                # print("pstart", p1_tmp)
                 waves = wave_ini(p1_tmp,dictionary) #строим волну со старта
                 if skip_all_cv:
                     wave_visual(waves,obj)
@@ -751,13 +752,15 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
                 print_colored("\n\n         FAILED", "red")
                 return None
 
+            # print(ways_to_tube_dict)
             path_to_all.append(ways_to_tube_dict[min(ways_to_tube)]) #список путей для одного из возможных маршрутов
 
             way_lenght += min(ways_to_tube)
             p1_tmp = ways_to_tube_dict[min(ways_to_tube)][-1]
-
         real_all_paths_no_joke[way_lenght] = path_to_all #как только закончился цикл - записываем получившийся маршрут
         way_lenghts.append(way_lenght) #и его длину (я не умею работать с ключами словаря(()
+
+        # print(real_all_paths_no_joke[min(way_lenghts)])
 
         if skip_all_cv:
             ini(obj,field_mat)
@@ -787,8 +790,8 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
             cv2.waitKey(0)
 
         for g in range(len(real_all_paths_no_joke[min(way_lenghts)])):
-
-            way_visualisation(obj, real_all_paths_no_joke[min(way_lenghts)][g], 0, 1, get_colors(g),10,g,field_mat)
+            if len(real_all_paths_no_joke[min(way_lenghts)][g]) > 1:
+                way_visualisation(obj, real_all_paths_no_joke[min(way_lenghts)][g], 0, 1, get_colors(g),10,g,field_mat)
             wave_frame_displaying(real_all_paths_no_joke[min(way_lenghts)][g][-1],0,0,obj,0,1,g+1) #рисуем номер в клетке с которой забираем трубу
             cv2.imshow("map", cv2.resize(obj, (600, 600)))
             cv2.waitKey(1)
@@ -802,6 +805,7 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
 
         print_colored("\n\n\n\n\n\n\n\n      WAY DONE", "green")
 
+    # print(real_all_paths_no_joke[min(way_lenghts)])
     return real_all_paths_no_joke[min(way_lenghts)]
 
 def progress_bar(value):
@@ -830,6 +834,7 @@ def get_relative_direction(pos1, pos2):
         return "D" if x2 > x1 else "U"
 
 def way_to_commands(path,field_mat):
+    used_tubes = []
     rob_dir = "U"
     res = []
     field_mat = np.array(field_mat)
@@ -847,16 +852,18 @@ def way_to_commands(path,field_mat):
     for i in range(len(path)):
         if i == len(path)-1: to_tube = 0
         else: to_tube = 1
-        s_way = way_to_commands_single(path[i], field_mat, rob_dir, to_tube)
+        if len(path[i]) > 1:
+            s_way = way_to_commands_single(path[i], field_mat, rob_dir, to_tube)
 
-        res += s_way[0]
-        rob_dir = s_way[1]
+            res += s_way[0]
+            rob_dir = s_way[1]
 
         if i != len(path) - 1:
 
             for j in tubes_cords:
-                if math.dist(j, path[i][-1]) <= 1:
+                if math.dist(j, path[i][-1]) <= 1 and j not in used_tubes:
                     cell_with_tube = j
+                    used_tubes.append(j)
                     break
 
             rel_pos = get_relative_direction(path[i][-1],cell_with_tube)
@@ -881,6 +888,8 @@ def create_path(mat,enable_visual = 0):
 
 
     full_way = final_roadmap(obj, mat_to_change,False, enable_visual)
+    print(full_way)
+    # cv2.waitKey(0)
     commands = way_to_commands(full_way,mat_to_change)
     type_u = detect_unload_type(full_way[-1][-1],mat_to_change, 2, commands[1])
     print(type_u)
@@ -1011,10 +1020,10 @@ def detect_unload_type(pos, mat, debugging=1, dir_list=None):
         tube_dir = "U"
 
         # Check left side (relative to tube)
-        if pos[1] != 0 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
+        if pos[1] != 0 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
             dir = "l"
         # Check right side (relative to tube)
-        elif pos[1] != len(mat[0])-1 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
+        elif pos[1] != len(mat[0])-1 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
             dir = "r"
         else:
             dir = "c"
@@ -1027,10 +1036,10 @@ def detect_unload_type(pos, mat, debugging=1, dir_list=None):
 
         # Check up side (relative to tube)
         if pos[0] != 0 and mat[pos[0] - 1][pos[1] - 1] // 10 != 6:
-            dir = "r"
+            dir = "l"
         # Check down side (relative to tube)
         elif pos[0] != len(mat)-1 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
-            dir = "l"
+            dir = "r"
         else:
             dir = "c"
 
