@@ -589,7 +589,7 @@ def pick_up_points_find(field_mat, waves_all):
                     if j - 1 > -1 and str(field_mat[i][j - 1]) == "33" and (i, j - 1) in waves_all: #все равно на россию переписывать...(
                         cell_to_tube.append((i, j - 1))
 
-                    if j + 1 <= len(field_mat[0]) and str(field_mat[i][j + 1]) == "32" and (i, j + 1) in waves_all:
+                    if j + 1 < len(field_mat[0]) and str(field_mat[i][j + 1]) == "32" and (i, j + 1) in waves_all:
                         cell_to_tube.append((i, j + 1))
 
 
@@ -606,7 +606,7 @@ def pick_up_points_find(field_mat, waves_all):
                         cell_to_tube.append((i + 1, j))
 
                     # ---------------picking up from ramps-----------------#
-                    if i + 1 <= len(field_mat) and str(field_mat[i + 1][j]) == "30" and (i + 1, j) in waves_all:
+                    if i + 1 < len(field_mat) and str(field_mat[i + 1][j]) == "30" and (i + 1, j) in waves_all:
                         cell_to_tube.append((i + 1, j))
 
                     if i - 1 > -1 and str(field_mat[i - 1][j]) == "31" and (i - 1, j) in waves_all:
