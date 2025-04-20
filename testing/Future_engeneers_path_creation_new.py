@@ -127,7 +127,7 @@ def neighbour_ini(mat):          #определение клеток в кот�
             #todo uncomment to move freely on sec floor
 
             elif int(str(mat[i][j])[0]) == 1: # если клетка из которой мы ищем возможные проходы - второй этаж
-                if i + 1 < 8 and ((mat[i + 1][j] == 11 or mat[i + 1][j] == 10) or (mat[i + 1][j] == 31)): #не выходим за матрицу и клетка в которую хотим пройти - элемент второго этажа или рампа на съезд
+                if i + 1 < len(mat) and ((mat[i + 1][j] == 11 or mat[i + 1][j] == 10) or (mat[i + 1][j] == 31)): #не выходим за матрицу и клетка в которую хотим пройти - элемент второго этажа или рампа на съезд
                     # добавляем клетку с измененной координатой
                     neighbour_dict[(i, j)].append((i + 1, j))
 
@@ -139,7 +139,7 @@ def neighbour_ini(mat):          #определение клеток в кот�
                     # и тут
                     neighbour_dict[(i, j)].append((i, j - 1))
 
-                if j + 1 < 8 and ((mat[i][j + 1] == 11 or mat[i][j + 1] == 10) or mat[i][j + 1] == 32):
+                if j + 1 < len(mat[i]) and ((mat[i][j + 1] == 11 or mat[i][j + 1] == 10) or mat[i][j + 1] == 32):
                     # этот код достаточно однообразный
                     neighbour_dict[(i, j)].append((i, j + 1))
 
@@ -190,7 +190,7 @@ def neighbour_ini(mat):          #определение клеток в кот�
                         neighbour_dict[(i, j)].append((i - 1, j))
 
                 elif mat[i][j] == 32: #это немного неэффективно
-                    if j + 1 < len(mat) and (mat[i][j + 1] == 70 or mat[i][j + 1] == 33):
+                    if j + 1 < len(mat[0]) and (mat[i][j + 1] == 70 or mat[i][j + 1] == 33):
                         neighbour_dict[(i, j)].append((i, j + 1))
 
                     if j - 1 > -1 and (mat[i][j - 1] == 10 or mat[i][j - 1] == 11 or mat[i][j - 1] == 11 or mat[i][j - 1] == 33):
@@ -200,7 +200,7 @@ def neighbour_ini(mat):          #определение клеток в кот�
                     if j - 1 > -1 and (mat[i][j - 1] == 70 or mat[i][j - 1] == 32):
                         neighbour_dict[(i, j)].append((i, j - 1))
 
-                    if j + 1 < len(mat) and (mat[i][j + 1] == 10 or mat[i][j + 1] == 11 or mat[i][j + 1] == 11 or mat[i][j + 1] == 32):
+                    if j + 1 < len(mat[0]) and (mat[i][j + 1] == 10 or mat[i][j + 1] == 11 or mat[i][j + 1] == 11 or mat[i][j + 1] == 32):
                         neighbour_dict[(i, j)].append((i, j + 1))
 
 
@@ -307,7 +307,7 @@ def wave_back_way(waves, p1, p2, dict, lenght_debugging,object,field_mat, max_le
     if p1 == p2:
         if lenght_debugging:
             print("Start and finish points can't be same! \n Points:", p1, p2)
-        return None
+        return [p1,0]
 
     if p1 != waves[0][0]:
         if lenght_debugging:
@@ -543,7 +543,7 @@ def robot_pos_finder(field_mat, remove_robot = True):
 
     my_pos = []
     for i in range(len(field_mat)):
-        for j in range(len(field_mat)):
+        for j in range(len(field_mat[0])):
 
             if str(field_mat[i][j])[-2] == "5":
 
@@ -567,7 +567,7 @@ def pick_up_points_find(field_mat, waves_all):
     tubes = []
     cell_to_tube = []
     for i in range(len(field_mat)):  # поиск клеток из которых можно забрать трубы (записывается в словарь вида труба - список клеток)
-        for j in range(len(field_mat)):
+        for j in range(len(field_mat[0])):
             # PS str(field_mat[i][j])[0] == str(field_mat[i][j-1])[0] - проверка на этажность. Если есть идеи как сделать проще то было бы славно
 
             if list(str(field_mat[i][j]))[-2] == "4": #если клетка - труба
@@ -576,8 +576,10 @@ def pick_up_points_find(field_mat, waves_all):
                 tubes.append((i, j))
 
                 if list(str(field_mat[i][j]))[-1] == "1":  # смотрим куда повернута труба
+                    print((i,j),1)
+                    print(waves_all)
 
-                    if j + 1 < len(field_mat) and str(field_mat[i][j])[0] == str(field_mat[i][j + 1])[0] and (i, j + 1) in waves_all:
+                    if j < len(field_mat[0]) and str(field_mat[i][j])[0] == str(field_mat[i][j + 1])[0] and (i, j + 1) in waves_all:
                         cell_to_tube.append((i, j + 1))
 
                     if j - 1 > -1 and str(field_mat[i][j])[0] == str(field_mat[i][j - 1])[0] and (i, j - 1) in waves_all:  # если на том же этаже и есть в волнах, то считаем что с этой клетки можно забрать
@@ -587,12 +589,13 @@ def pick_up_points_find(field_mat, waves_all):
                     if j - 1 > -1 and str(field_mat[i][j - 1]) == "33" and (i, j - 1) in waves_all: #все равно на россию переписывать...(
                         cell_to_tube.append((i, j - 1))
 
-                    if j + 1 < len(field_mat) and str(field_mat[i][j + 1]) == "32" and (i, j + 1) in waves_all:
+                    if j + 1 <= len(field_mat[0]) and str(field_mat[i][j + 1]) == "32" and (i, j + 1) in waves_all:
                         cell_to_tube.append((i, j + 1))
 
 
 
                 elif list(str(field_mat[i][j]))[-1] == "0":
+                    print("found")
 
                     if i - 1 > -1 and str(field_mat[i][j])[0] == str(field_mat[i - 1][j])[0] and (
                     i - 1, j) in waves_all:
@@ -603,7 +606,7 @@ def pick_up_points_find(field_mat, waves_all):
                         cell_to_tube.append((i + 1, j))
 
                     # ---------------picking up from ramps-----------------#
-                    if i + 1 < len(field_mat) and str(field_mat[i + 1][j]) == "30" and (i + 1, j) in waves_all:
+                    if i + 1 <= len(field_mat) and str(field_mat[i + 1][j]) == "30" and (i + 1, j) in waves_all:
                         cell_to_tube.append((i + 1, j))
 
                     if i - 1 > -1 and str(field_mat[i - 1][j]) == "31" and (i - 1, j) in waves_all:
@@ -624,7 +627,7 @@ def find_points_to_unload(field_mat):
     unload_cells = []
 
     for z in range(len(field_mat)):
-        for ov in range(len(field_mat)):  # клетки из которых можно разгрузить трубы
+        for ov in range(len(field_mat[0])):  # клетки из которых можно разгрузить трубы
             if str(field_mat[z][ov])[0] == "6":  # если нашли точку разгрузки
 
                 unload_cords.append((z, ov))
@@ -644,7 +647,7 @@ def find_points_to_unload(field_mat):
 
                 if str(field_mat[z][ov])[-1] == "2" or str(field_mat[z][ov])[-1] == "3":
 
-                    if ov + 1 < len(field_mat) and field_mat[z][ov + 1] == 70:
+                    if ov + 1 < len(field_mat[0]) and field_mat[z][ov + 1] == 70:
                         unload_cells_dict[unload_cords[-1]].append((z, ov + 1))
                         unload_cells.append((z, ov + 1))
 
@@ -693,7 +696,7 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
     unload_cords, unload_cells = find_points_to_unload(field_mat) #cords - cords of tube holders, cells - cells to unload from
 
     for i in range(len(tubes)): #Проверка того, что в каждую трубу можно доехать, иначе маршрут нельзя построить
-        if cells_to_tubes_dict[tubes[i]] == []:
+        if not cells_to_tubes_dict[tubes[i]]:
             wave_frame_displaying(tubes[i],0,0,obj,1,(0,0,255),"ERR",(6,0.8))
             print("Cant create path! Unreachable tube found:", tubes[i])
             print_colored("\n\n\n\n         FAILED", "red")
@@ -721,6 +724,7 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
             ways_to_tube_dict = {}
             ways_to_tube = []
 
+
             for q in range(len(cells_to_tubes_dict[tubes[i][j]][0])): #для всех клеток с которых можно забрать конкретную трубу
 
                 #16.11.24 в 20:25 я пофиксил тупейший баг, но об этом никто не узнает
@@ -734,11 +738,11 @@ def final_roadmap(obj,field_mat,ramp_checkment = False,skip_all_cv = False):
                 if way: #если путь есть, то записываем его в словарь с путями
                     progress_bar(round(( (1/len(tubes))*i + ((1/len(tubes))/len(tubes[i])*(j+1) ) )*100)) #nvm
                     #print(round(( (1/len(tubes))*(i+1) + ((1/len(tubes))/len(tubes[i])*j ) )*100))
-
                     ways_to_tube_dict[way[1]] = way[0] #way[0] - way cords list, way[1] - way lenght with ramps
                     ways_to_tube.append(way[1])
                 else:
-                    print("Failed while creating one of final ways. \n Seems like field was scanned incorrectly", "\n p1:", p1_tmp, "p2:", cells_to_tubes_dict[(tubes[i][j])][0][q])
+                    pass
+                    # print("Failed while creating one of final ways. \n Seems like field was scanned incorrectly", "\n p1:", p1_tmp, "p2:", cells_to_tubes_dict[(tubes[i][j])][0][q])
 
             if not ways_to_tube: #если к одной из труб совсем никак нельзя проехать
                 print("One of tubes is completely unreachable!")
@@ -971,13 +975,13 @@ def detect_unload_type(pos, mat, debugging=1, dir_list=None):
 
     # Check for tube in each direction and determine approach direction
     # Down check
-    if pos[0] != 7 and mat[pos[0] + 1][pos[1]] // 10 == 6:
+    if pos[0] != len(mat)-1 and mat[pos[0] + 1][pos[1]] // 10 == 6:
         if debugging:
             print("down")
         tube_dir = "D"
 
         # Check right side (relative to tube)
-        if pos[1] != 7 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
+        if pos[1] != len(mat[0])-1 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
             dir = "r"
         # Check left side (relative to tube)
         elif pos[1] != 0 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
@@ -986,17 +990,17 @@ def detect_unload_type(pos, mat, debugging=1, dir_list=None):
             dir = "c"
 
     # Right check
-    elif pos[1] != 7 and mat[pos[0]][pos[1] + 1] // 10 == 6:
+    elif pos[1] != len(mat[0])-1 and mat[pos[0]][pos[1] + 1] // 10 == 6:
         if debugging:
             print("right")
         tube_dir = "R"
 
         # Check down side (relative to tube)
-        if pos[0] != 7 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
-            dir = "r"
+        if pos[0] != len(mat)-1 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
+            dir = "l"
         # Check up side (relative to tube)
         elif pos[0] != 0 and mat[pos[0] - 1][pos[1] + 1] // 10 != 6:
-            dir = "l"
+            dir = "r"
         else:
             dir = "c"
 
@@ -1007,11 +1011,11 @@ def detect_unload_type(pos, mat, debugging=1, dir_list=None):
         tube_dir = "U"
 
         # Check left side (relative to tube)
-        if pos[1] != 0 and mat[pos[0] - 1][pos[1] - 1] // 10 != 6:
-            dir = "r"
-        # Check right side (relative to tube)
-        elif pos[1] != 7 and mat[pos[0] - 1][pos[1] + 1] // 10 != 6:
+        if pos[1] != 0 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
             dir = "l"
+        # Check right side (relative to tube)
+        elif pos[1] != len(mat[0])-1 and mat[pos[0] + 1][pos[1] + 1] // 10 != 6:
+            dir = "r"
         else:
             dir = "c"
 
@@ -1025,7 +1029,7 @@ def detect_unload_type(pos, mat, debugging=1, dir_list=None):
         if pos[0] != 0 and mat[pos[0] - 1][pos[1] - 1] // 10 != 6:
             dir = "r"
         # Check down side (relative to tube)
-        elif pos[0] != 7 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
+        elif pos[0] != len(mat)-1 and mat[pos[0] + 1][pos[1] - 1] // 10 != 6:
             dir = "l"
         else:
             dir = "c"
@@ -1041,24 +1045,24 @@ def way_to_commands_single(path,mat,my_dir, to_tube = 0):
 
     for i in range(len(path)):
 
-        if i == len(path) - 2 and to_tube and len(path) > 2:
-            tubes_codes = [1141,1140,7041,7040]
-            # print(my_dir)
-            my_y = path[-1][0]
-            my_x = path[-1][1]
-
-
-            if res[-1][-1] in ["L","R"]:
-                slice = mat[my_y,my_x-1:my_x+2]
-                if np.isin(slice,tubes_codes).any():
-                    res.append("Q0")
-                    # print("added pre_load!")
-
-            elif res[-1][-1] in ["U","D"]:
-                slice = mat[my_y-1:my_y+2,my_x]
-                if np.isin(slice,tubes_codes).any():
-                    res.append("Q0")
-                    # print("added pre_load!")
+        # if i == len(path) - 2 and to_tube and len(path) > 2:
+        #     tubes_codes = [1141,1140,7041,7040]
+        #     # print(my_dir)
+        #     my_y = path[-1][0]
+        #     my_x = path[-1][1]
+        #
+        #
+        #     if res[-1][-1] in ["L","R"]:
+        #         slice = mat[my_y,my_x-1:my_x+2]
+        #         if np.isin(slice,tubes_codes).any():
+        #             res.append("Q0")
+        #             # print("added pre_load!")
+        #
+        #     elif res[-1][-1] in ["U","D"]:
+        #         slice = mat[my_y-1:my_y+2,my_x]
+        #         if np.isin(slice,tubes_codes).any():
+        #             res.append("Q0")
+        #             # print("added pre_load!")
 
         res_prev = ""
         current_cell = mat[path[i]]
@@ -1087,6 +1091,7 @@ def way_to_commands_single(path,mat,my_dir, to_tube = 0):
                     res_prev +=f'F{2 - floor}'
                     floor = 3-floor
                 else:
+                    # pass
                     res_prev+="X1"
 
 
